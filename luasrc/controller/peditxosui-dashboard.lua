@@ -40,5 +40,5 @@ function action_dashboard()
     end
 
     -- Render dashboard template
-    luci.template("peditxosui/dashboard")
+    luci.template.render("peditxosui/dashboard")
 end
