@@ -114,10 +114,10 @@ tar -C "${IPK_PKG}/CONTROL" -czf "${WORK_DIR}/build-ipk/tmp/control.tar.gz" .
 # debian-binary
 echo "2.0" > "${WORK_DIR}/build-ipk/tmp/debian-binary"
 
-# IPK is just a .tar archive containing these three files
+# IPK = gzipped tar containing these three files
 IPK_FILE="${WORK_DIR}/artifacts-ipk/${PKG_NAME}_${PKG_VERSION}-${PKG_RELEASE}_all.ipk"
 mkdir -p "${WORK_DIR}/artifacts-ipk"
-tar -C "${WORK_DIR}/build-ipk/tmp" -cf "${IPK_FILE}" debian-binary control.tar.gz data.tar.gz
+tar -C "${WORK_DIR}/build-ipk/tmp" -czf "${IPK_FILE}" debian-binary control.tar.gz data.tar.gz
 
 echo "  IPK: ${IPK_FILE}"
 echo "  Size: $(du -h "${IPK_FILE}" | awk '{print $1}')"
