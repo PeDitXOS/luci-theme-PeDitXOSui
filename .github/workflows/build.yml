@@ -16,7 +16,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  build-ipk:
+    name: Build IPK (OpenWrt 23.05)
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -28,7 +29,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential libncurses5-dev gawk git gettext unzip zlib1g-dev file python3 python3-venv curl
 
-      - name: Setup OpenWrt SDK
+      - name: Setup OpenWrt SDK 23.05
         run: |
           set -e
           wget -q https://downloads.openwrt.org/releases/23.05.0/targets/x86/64/openwrt-sdk-23.05.0-x86-64_gcc-12.3.0_musl.Linux-x86_64.tar.xz
@@ -39,31 +40,95 @@ jobs:
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
-      - name: Add luci-theme-peditxosui package
+      - name: Add package
         run: |
           set -e
           cd sdk/package
-          git clone https://github.com/peditx/luci-theme-peditxosui.git
+          git clone https://github.com/PeDitXOS/luci-theme-PeDitXOSui.git
           cd ..
           echo "CONFIG_PACKAGE_luci-theme-peditxosui=m" >> .config
 
-      - name: Build luci-theme-peditxosui
+      - name: Build IPK
         run: |
           set -e
           cd sdk
           make defconfig
           make package/luci-theme-peditxosui/compile -j1 V=sc
 
-      - name: Save luci-theme-peditxosui package
+      - name: Save IPK
         run: |
           cd sdk
-          mkdir -p artifacts
-          find bin/ -name "*.ipk" -exec cp {} artifacts/ \;
+          mkdir -p artifacts-ipk
+          find bin/ -name "luci-theme-peditxosui_*.ipk" -exec cp {} artifacts-ipk/ \;
+
+      - name: Upload IPK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: luci-theme-peditxosui-ipk
+          path: artifacts-ipk/
+
+  build-apk:
+    name: Build APK (OpenWrt 25.12)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libncurses5-dev gawk git gettext unzip zlib1g-dev file python3 python3-venv curl zstd
+
+      - name: Setup OpenWrt SDK 25.12
+        run: |
+          set -e
+          wget -q https://downloads.openwrt.org/releases/25.12.0/targets/x86/64/openwrt-sdk-25.12.0-x86-64_gcc-14.3.0_musl.Linux-x86_64.tar.zst
+          mkdir sdk && tar --use-compress-program=unzstd -xf openwrt-sdk-25.12.0-x86-64_gcc-14.3.0_musl.Linux-x86_64.tar.zst -C sdk --strip-components=1
+          cd sdk
+          echo "src-git packages https://github.com/openwrt/packages.git" > feeds.conf.default
+          echo "src-git luci https://github.com/openwrt/luci.git" >> feeds.conf.default
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+
+      - name: Add package
+        run: |
+          set -e
+          cd sdk/package
+          git clone https://github.com/PeDitXOS/luci-theme-PeDitXOSui.git
+          cd ..
+          echo "CONFIG_PACKAGE_luci-theme-peditxosui=m" >> .config
+
+      - name: Build APK
+        run: |
+          set -e
+          cd sdk
+          make defconfig
+          make package/luci-theme-peditxosui/compile -j1 V=sc
+
+      - name: Save APK
+        run: |
+          cd sdk
+          mkdir -p artifacts-apk
+          find bin/ -name "luci-theme-peditxosui_*.apk" -exec cp {} artifacts-apk/ \;
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: luci-theme-peditxosui-apk
+          path: artifacts-apk/
+
+  release:
+    name: Create Release
+    needs: [build-ipk, build-apk]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
 
       - name: Create Release
-        id: create_release
         uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
         with:
           tag_name: ${{ github.ref_name }}
           name: luci-theme-peditxosui ${{ github.ref_name }}
@@ -77,20 +142,22 @@ jobs:
             - 🧭 Bottom Navigation Bar
             - 📊 Dashboard with Quick Status
             - 🔧 Easy UCI Configuration
+            - 📡 WiFi & LAN Device Detection
+            - 📌 Static DHCP Lease
 
             ### Installation
+
+            **IPK (OpenWrt 23.05 / 24.10):**
             ```bash
             opkg install luci-theme-peditxosui_*.ipk
             ```
 
-            ### Changes
-            - See [CHANGELOG.md](https://github.com/peditx/luci-theme-peditxosui/blob/main/CHANGELOG.md) for details
-          files: artifacts/luci-theme-peditxosui_*.ipk
+            **APK (OpenWrt 25.12+):**
+            ```bash
+            apk add luci-theme-peditxosui_*.apk
+            ```
+          files: |
+            luci-theme-peditxosui-ipk/*
+            luci-theme-peditxosui-apk/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: luci-theme-peditxosui
-          path: artifacts/
