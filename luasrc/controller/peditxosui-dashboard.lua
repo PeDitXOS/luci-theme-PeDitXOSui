@@ -4,11 +4,8 @@
 module("luci.controller.peditxosui-dashboard", package.seeall)
 
 function index()
-    -- Dashboard as main status page (priority 1 = first in menu)
+    -- Dashboard as status page
     entry({"admin", "status", "peditxosui"}, call("action_dashboard"), _("PeDitXOS Dashboard"), 1)
-
-    -- Redirect /cgi-bin/luci/admin to dashboard
-    entry({"admin"}, alias("admin", "status", "peditxosui"), _("Dashboard"), 1)
 end
 
 function action_dashboard()
