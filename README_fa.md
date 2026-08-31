@@ -1,60 +1,238 @@
-# PeDitX Theme for OpenWrt
+# 🎨 PeDitXOSui - قالب مدرن LuCI برای OpenWrt
 
-![PeDitX Banner](https://raw.githubusercontent.com/peditx/luci-theme-peditx/refs/heads/main/luasrc/brand.png)
+<div align="center">
 
-## انتخاب زبان:
+![PeDitXOSui](screenshots/preview.png)
 
-[**English**](README.md) | [**فارسی**](README_fa.md) | [**中文**](README_zh.md) | [**Русский**](README_ru.md)
+**یک قالب مدرن و فیوچریستیک برای رابط وب LuCI اپن‌ورت**
 
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![OpenWrt](https://img.shields.io/badge/OpenWrt-23.05-green.svg)](https://openwrt.org)
+[![Version](https://img.shields.io/badge/Version-1.0.0-orange.svg)]()
 
+[English](README.md) | [Русский](README_ru.md) | [中文](README_zh.md)
 
-PeDitX یک تم طراحی شده برای OpenWrt است که مخصوصاً برای دستگاه‌های موبایل بهینه شده است. این تم اولین تم از PeDitX برای OpenWrt بوده و کاملاً بهینه و زیبا است. همچنین از **PWA** پشتیبانی می‌کند و به راحتی روی تمامی نسخه‌های OpenWrt قابل استفاده است.
+</div>
 
-## ویژگی‌ها:
+---
 
-- بهینه شده برای موبایل
-- پشتیبانی از **PWA**
-- طراحی اختصاصی و زیبا
-- قابل استفاده برای تمامی نسخه‌های OpenWrt
-- بر اساس تم Bootstrap طراحی شده است
+## ✨ ویژگی‌ها
 
-## لینک‌های دانلود:
-[![Download PeDitX Theme](https://img.shields.io/github/downloads/peditx/luci-theme-peditx/total.svg)](https://github.com/peditx/luci-theme-peditx/releases)
+- 🌓 **حالت تاریک و روشن** - تغییر آسان قالب با ذخیره ترجیحات
+- 📱 **کاملاً ریسپانسیو** - بهینه شده برای دسکتاپ، تبلت و موبایل
+- 🎯 **داشبورد مدرن** - رابط کاربری تمیز و بصری
+- ⚡ **سریع و سبک** - وابستگی‌های حداقلی
+- 🎨 **طراحی شیشه‌ای** - افکت‌های بلور و گرادیانت زیبا
+- 🔧 **قابل تنظیم** - پیکربندی آسان از طریق UCI
+- 📊 **وضعیت لحظه‌ای** - دسترسی سریع به اطلاعات سیستم
+- 🧭 **نوار ناوبری پایین** - ناوبری سازگار با موبایل
 
-## لایسنس:
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+## 📸 اسکرین‌شات‌ها
 
-این تم تحت **Apache License 2.0** منتشر شده است. شما می‌توانید این تم را به صورت آزادانه استفاده و توزیع کنید.
+### دسکتاپ (حالت تاریک)
+![Desktop Dark](screenshots/desktop-dark.png)
 
-## تماس با ما:
-[![Telegram](https://img.shields.io/badge/Telegram-Join%20Now-blue.svg)](https://t.me/peditx)
+### دسکتاپ (حالت روشن)
+![Desktop Light](screenshots/desktop-light.png)
 
-## هشدار:
-این تم بر روی نسخه **LEDE** آزمایش نشده است.
+### نمای موبایل
+![Mobile](screenshots/mobile.png)
 
-## تصاویر پیش‌نمایش:
+## 🚀 نصب
 
-### تصاویر مربوط به کامپیوتر:
-![Screenshot 1](https://raw.githubusercontent.com/peditx/luci-theme-peditx/refs/heads/main/screenshots/1.png)
-![Screenshot 2](https://raw.githubusercontent.com/peditx/luci-theme-peditx/refs/heads/main/screenshots/2.png)
-![Screenshot 3](https://raw.githubusercontent.com/peditx/luci-theme-peditx/refs/heads/main/screenshots/3.png)
-![Screenshot 4](https://raw.githubusercontent.com/peditx/luci-theme-peditx/refs/heads/main/screenshots/4.png)
+### روش ۱: با استفاده از opkg (پیشنهادی)
 
-### تصاویر مربوط به موبایل:
-![Mobile Screenshot 1](https://raw.githubusercontent.com/peditx/luci-theme-peditx/refs/heads/main/screenshots/m1.PNG)
-![Mobile Screenshot 2](https://raw.githubusercontent.com/peditx/luci-theme-peditx/refs/heads/main/screenshots/m2.PNG)
+```bash
+# دانلود آخرین نسخه .ipk از Releases
+wget https://github.com/peditx/luci-theme-peditxosui/releases/latest/download/luci-theme-peditxosui_1.0.0-r1_all.ipk
 
-## تشکر ویژه:
+# نصب پکیج
+opkg install luci-theme-peditxosui_1.0.0-r1_all.ipk
 
-- [PeDitX](https://github.com/peditx)
-- [PeDitXRT](https://github.com/peditx/peditxrt)
-- [OpenWrt](https://github.com/openwrt)
-- [ImmortalWrt](https://github.com/immortalwrt)
-- [Bootstrap Theme](https://github.com/twbs/bootstrap)
+# ریستارت LuCI
+/etc/init.d/uhttpd restart
+```
 
-این تم بر اساس [Bootstrap Theme](https://github.com/twbs/bootstrap) طراحی شده است.
+### روش ۲: با استفاده از install.sh
 
+```bash
+wget -O /tmp/install.sh https://raw.githubusercontent.com/peditx/luci-theme-peditxosui/main/install.sh
+chmod +x /tmp/install.sh
+/tmp/install.sh
+```
 
-© 2018–2025 PeDitX. All rights reserved.  
-For support or inquiries, join us on [Telegram](https://t.me/peditx).
+### روش ۳: بیلد از سورس
 
+```bash
+# کلون ریپازیتوری
+git clone https://github.com/peditx/luci-theme-peditxosui.git
+cd luci-theme-peditxosui
+
+# کپی به درخت بیلد اپن‌ورت
+cp -r . /path/to/openwrt/package/luci-theme-peditxosui
+
+# بیلد پکیج
+cd /path/to/openwrt
+make package/luci-theme-peditxosui/compile V=s
+```
+
+## ⚙️ پیکربندی
+
+بعد از نصب، می‌توانید قالب را از طریق UCI پیکربندی کنید:
+
+```bash
+# نمایش تنظیمات قالب
+uci show peditxosui
+
+# تغییر رنگ پس‌زمینه
+uci set peditxosui.theme.color='#0a0e1a'
+
+# فعال/غیرفعال کردن نوار ناوبری
+uci set peditxosui.theme.navbar='1'
+
+# تنظیم افکت بلور (۰-۲۰)
+uci set peditxosui.theme.blur='10'
+
+# ذخیره تغییرات
+uci commit peditxosui
+```
+
+### پیکربندی نوار ناوبری
+
+```bash
+# اضافه کردن آیتم جدید به نوار ناوبری
+uci add peditxosui navbar
+uci set peditxosui.@navbar[-1].name='ترمینال'
+uci set peditxosui.@navbar[-1].enable='Enable'
+uci set peditxosui.@navbar[-1].line='1'
+uci set peditxosui.@navbar[-1].newtab='No'
+uci set peditxosui.@navbar[-1].icon='/www/luci-static/peditxosui/peds/icon/navbar/terminal.png'
+uci set peditxosui.@navbar[-1].address='/cgi-bin/luci/admin/services/ttyd'
+uci commit peditxosui
+```
+
+## 🎨 ویژگی‌ها
+
+### ویجت وضعیت سریع
+- وضعیت آنلاین سیستم با دایره پیشرفت متحرک
+- نشانگرهای سرعت دانلود/آپلود
+- آمار شبکه لحظه‌ای
+
+### مانیتور ترافیک
+- نمودار ترافیک زنده
+- تجسم داده‌های تاریخی
+- ردیابی مصرف پهنای باند
+
+### دستگاه‌های متصل
+- لیست دستگاه‌ها با قدرت سیگنال
+- آیکون‌های نوع دستگاه
+- آدرس IP و MAC
+
+### لاگ سیستم
+- لاگ‌های سیستم لحظه‌ای
+- ورودی‌ها با رنگ‌بندی
+- اسکرول آسان
+
+### ماژول‌های اصلی
+- تنظیمات WiFi
+- دستگاه‌های متصل
+- مانیتور ترافیک
+- فایروال
+- اطلاعات سیستم
+- به‌روزرسانی نرم‌افزار
+
+## �یلی سفارشی‌سازی
+
+### رنگ‌ها
+
+فایل `luasrc/style/peditxosui.css` را ویرایش کنید:
+
+```css
+:root {
+    --accent-primary: #06b6d4;    /* رنگ اصلی */
+    --accent-secondary: #8b5cf6;  /* رنگ فرعی */
+    --accent-success: #10b981;    /* موفقیت/آنلاین */
+    --accent-warning: #f59e0b;    /* هشدار */
+    --accent-danger: #ef4444;     /* خطا/خطر */
+}
+```
+
+### پس‌زمینه
+
+قالب از گرادیانت‌های متحرک پس‌زمینه استفاده می‌کند. برای تغییر:
+
+```css
+body::before {
+    background:
+        radial-gradient(ellipse at 20% 20%, rgba(6, 182, 212, 0.1) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+}
+```
+
+## 📁 ساختار
+
+```
+luci-theme-peditxosui/
+├── luasrc/
+│   ├── style/
+│   │   ├── peditxosui.css    # استایل‌های اصلی
+│   │   ├── login.css         # استایل صفحه ورود
+│   │   └── navbar.css        # استایل نوار ناوبری
+│   ├── fonts/                # فونت‌های سفارشی
+│   ├── peds/                 # فایل‌های پد
+│   └── app.js                # جاوااسکریپت اصلی
+├── template/
+│   ├── header.htm            # هدر صفحه
+│   ├── footer.htm            # فوتر با نوار ناوبری
+│   └── sysauth.htm           # صفحه ورود
+├── js/
+│   └── menu-peditxosui.js    # مدیریت منو
+├── root/
+│   └── etc/
+│       ├── config/peditxosui # پیکربندی UCI
+│       └── uci-defaults/     # راه‌اندازی اولیه
+├── Makefile                  # پیکربندی بیلد
+├── install.sh                # اسکریپت نصب
+└── README.md                 # این فایل
+```
+
+## 🔧 وابستگی‌ها
+
+- LuCI 18.06+
+- OpenWrt 19.07+
+- libc
+
+## 🤝 مشارکت
+
+مشارکت شما خوشآمدید! لطفاً آزادانه یک Pull Request ارسال کنید.
+
+1. ریپازیتوری را Fork کنید
+2. شاخه ویژگی خود را ایجاد کنید (`git checkout -b feature/AmazingFeature`)
+3. تغییرات خود را Commit کنید (`git commit -m 'Add some AmazingFeature'`)
+4. به شاخه Push کنید (`git push origin feature/AmazingFeature`)
+5. یک Pull Request باز کنید
+
+## 📝 مجوز
+
+این پروژه تحت مجوز Apache License 2.0 است - جزئیات را در فایل [LICENSE](LICENSE) مشاهده کنید.
+
+## 👨‍💻 نویسنده
+
+**PeDitX** - [تلگرام](https://t.me/peditx)
+
+## 🙏 قدردانی
+
+- [OpenWrt](https://openwrt.org) - توزیع لینوکس شگفت‌انگیز
+- [LuCI](https://github.com/openwrt/luci) - چارچوب رابط وب
+- [luci-theme-bootstrap](https://github.com/openwrt/luci) - قالب پایه
+- [luci-theme-material](https://github.com/LuttyYang/luci-theme-material) - الهام‌بخش
+
+---
+
+<div align="center">
+
+**ساخته شده با ❤️ برای PeDitXOS**
+
+[⬆ بازگشت به بالا](#-peDitXOSui---قالب-مدرن-luci-برای-openwrt)
+
+</div>

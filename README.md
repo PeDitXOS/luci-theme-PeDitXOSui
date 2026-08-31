@@ -1,59 +1,238 @@
-# PeDitX Theme for OpenWrt
+# 🎨 PeDitXOSui - Modern LuCI Theme for OpenWrt
 
-![PeDitX Banner](https://raw.githubusercontent.com/peditx/luci-theme-peditx/refs/heads/main/luasrc/brand.png)
+<div align="center">
 
-## Language Selection:
+![PeDitXOSui](screenshots/preview.png)
 
-[**English**](README.md) | [**فارسی**](README_fa.md) | [**中文**](README_zh.md) | [**Русский**](README_ru.md)
+**A modern, futuristic UI theme for OpenWrt's LuCI web interface**
 
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![OpenWrt](https://img.shields.io/badge/OpenWrt-23.05-green.svg)](https://openwrt.org)
+[![Version](https://img.shields.io/badge/Version-1.0.0-orange.svg)]()
 
-PeDitX is a theme designed for OpenWrt, specifically optimized for mobile devices. It is the first theme from PeDitX for OpenWrt and is highly optimized and visually appealing. It also supports **PWA** (Progressive Web App) functionality, making it compatible with modern web standards, and is easily usable across all OpenWrt versions.
+[العربية](README_fa.md) | [Русский](README_ru.md) | [中文](README_zh.md)
 
-## Features:
+</div>
 
-- Optimized for mobile
-- Supports **PWA** (Progressive Web App)
-- Custom and beautiful design
-- Usable across all OpenWrt versions
-- Built upon the Bootstrap theme
+---
 
-## Download Links:
-[![Download PeDitX Theme](https://img.shields.io/github/downloads/peditx/luci-theme-peditx/total.svg)](https://github.com/peditx/luci-theme-peditx/releases)
+## ✨ Features
 
-## License:
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+- 🌓 **Dark & Light Mode** - Easy theme switching with persistent preference
+- 📱 **Fully Responsive** - Optimized for desktop, tablet, and mobile
+- 🎯 **Modern Dashboard** - Clean, intuitive interface
+- ⚡ **Fast & Lightweight** - Minimal dependencies
+- 🎨 **Glassmorphism Design** - Beautiful blur effects and gradients
+- 🔧 **Customizable** - Easy to configure via UCI
+- 📊 **Real-time Status** - Quick access to system information
+- 🧭 **Bottom Navbar** - Mobile-friendly navigation
 
-This theme is released under the **Apache License 2.0**. You are free to use and distribute it as per the terms of the license.
+## 📸 Screenshots
 
-## Contact Us:
-[![Telegram](https://img.shields.io/badge/Telegram-Join%20Now-blue.svg)](https://t.me/peditx)
+### Desktop (Dark Mode)
+![Desktop Dark](screenshots/desktop-dark.png)
 
-## Warning:
-This theme has not been tested on the **LEDE** version.
+### Desktop (Light Mode)
+![Desktop Light](screenshots/desktop-light.png)
 
-## Preview Images:
+### Mobile View
+![Mobile](screenshots/mobile.png)
 
-### Computer Screenshots:
-![Screenshot 1](https://raw.githubusercontent.com/peditx/luci-theme-peditx/refs/heads/main/screenshots/1.png)
-![Screenshot 2](https://raw.githubusercontent.com/peditx/luci-theme-peditx/refs/heads/main/screenshots/2.png)
-![Screenshot 3](https://raw.githubusercontent.com/peditx/luci-theme-peditx/refs/heads/main/screenshots/3.png)
-![Screenshot 4](https://raw.githubusercontent.com/peditx/luci-theme-peditx/refs/heads/main/screenshots/4.png)
+## 🚀 Installation
 
-### Mobile Screenshots:
-![Mobile Screenshot 1](https://raw.githubusercontent.com/peditx/luci-theme-peditx/refs/heads/main/screenshots/m1.PNG)
-![Mobile Screenshot 2](https://raw.githubusercontent.com/peditx/luci-theme-peditx/refs/heads/main/screenshots/m2.PNG)
+### Method 1: Using opkg (Recommended)
 
-## Special Thanks:
+```bash
+# Download the latest .ipk package from Releases
+wget https://github.com/peditx/luci-theme-peditxosui/releases/latest/download/luci-theme-peditxosui_1.0.0-r1_all.ipk
 
-- [PeDitX](https://github.com/peditx)
-- [PeDitXRT](https://github.com/peditx/peditxrt)
-- [OpenWrt](https://github.com/openwrt)
-- [ImmortalWrt](https://github.com/immortalwrt)
-- [Bootstrap Theme](https://github.com/twbs/bootstrap)
+# Install the package
+opkg install luci-theme-peditxosui_1.0.0-r1_all.ipk
 
-This theme is based on the [Bootstrap Theme](https://github.com/twbs/bootstrap).
+# Restart LuCI
+/etc/init.d/uhttpd restart
+```
 
+### Method 2: Using install.sh
 
-© 2018–2025 PeDitX. All rights reserved.  
-For support or inquiries, join us on [Telegram](https://t.me/peditx).
+```bash
+wget -O /tmp/install.sh https://raw.githubusercontent.com/peditx/luci-theme-peditxosui/main/install.sh
+chmod +x /tmp/install.sh
+/tmp/install.sh
+```
 
+### Method 3: Build from Source
+
+```bash
+# Clone the repository
+git clone https://github.com/peditx/luci-theme-peditxosui.git
+cd luci-theme-peDitXOSui
+
+# Copy to OpenWrt build tree
+cp -r . /path/to/openwrt/package/luci-theme-peditxosui
+
+# Build the package
+cd /path/to/openwrt
+make package/luci-theme-peditxosui/compile V=s
+```
+
+## ⚙️ Configuration
+
+After installation, you can configure the theme via UCI:
+
+```bash
+# Access theme settings
+uci show peditxosui
+
+# Change background color
+uci set peditxosui.theme.color='#0a0e1a'
+
+# Enable/disable navbar
+uci set peditxosui.theme.navbar='1'
+
+# Adjust blur effect (0-20)
+uci set peditxosui.theme.blur='10'
+
+# Commit changes
+uci commit peditxosui
+```
+
+### Navbar Configuration
+
+```bash
+# Add a new navbar item
+uci add peditxosui navbar
+uci set peditxosui.@navbar[-1].name='Terminal'
+uci set peditxosui.@navbar[-1].enable='Enable'
+uci set peditxosui.@navbar[-1].line='1'
+uci set peditxosui.@navbar[-1].newtab='No'
+uci set peditxosui.@navbar[-1].icon='/www/luci-static/peditxosui/peds/icon/navbar/terminal.png'
+uci set peditxosui.@navbar[-1].address='/cgi-bin/luci/admin/services/ttyd'
+uci commit peditxosui
+```
+
+## 🎨 Features
+
+### Quick Status Widget
+- System online status with animated progress circle
+- Download/Upload speed indicators
+- Real-time network statistics
+
+### Traffic Monitor
+- Live traffic chart
+- Historical data visualization
+- Bandwidth usage tracking
+
+### Connected Devices
+- Device list with signal strength
+- Device type icons
+- IP address and MAC information
+
+### System Log
+- Real-time system logs
+- Color-coded entries
+- Easy scrolling
+
+### Main Modules
+- WiFi Settings
+- Connected Devices
+- Traffic Monitor
+- Firewall
+- System Info
+- Software Updates
+
+## 🛠️ Customization
+
+### Colors
+
+Edit `luasrc/style/peditxosui.css` to customize colors:
+
+```css
+:root {
+    --accent-primary: #06b6d4;    /* Primary accent */
+    --accent-secondary: #8b5cf6;  /* Secondary accent */
+    --accent-success: #10b981;    /* Success/Online */
+    --accent-warning: #f59e0b;    /* Warning */
+    --accent-danger: #ef4444;     /* Error/Danger */
+}
+```
+
+### Background
+
+The theme uses animated gradient backgrounds. To modify:
+
+```css
+body::before {
+    background:
+        radial-gradient(ellipse at 20% 20%, rgba(6, 182, 212, 0.1) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+}
+```
+
+## 📁 Structure
+
+```
+luci-theme-peditxosui/
+├── luasrc/
+│   ├── style/
+│   │   ├── peditxosui.css    # Main styles
+│   │   ├── login.css         # Login page styles
+│   │   └── navbar.css        # Navbar styles
+│   ├── fonts/                # Custom fonts
+│   ├── peds/                 # Ped files
+│   └── app.js                # Main JavaScript
+├── template/
+│   ├── header.htm            # Page header
+│   ├── footer.htm            # Page footer with navbar
+│   └── sysauth.htm           # Login page
+├── js/
+│   └── menu-peditxosui.js    # Menu handler
+├── root/
+│   └── etc/
+│       ├── config/peditxosui # UCI config
+│       └── uci-defaults/     # First boot setup
+├── Makefile                  # Build configuration
+├── install.sh                # Installation script
+└── README.md                 # This file
+```
+
+## 🔧 Dependencies
+
+- LuCI 18.06+
+- OpenWrt 19.07+
+- libc
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📝 License
+
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+
+## 👨‍💻 Author
+
+**PeDitX** - [Telegram](https://t.me/peditx)
+
+## 🙏 Acknowledgments
+
+- [OpenWrt](https://openwrt.org) - The amazing Linux distribution
+- [LuCI](https://github.com/openwrt/luci) - The web interface framework
+- [luci-theme-bootstrap](https://github.com/openwrt/luci) - Base theme
+- [luci-theme-material](https://github.com/LuttyYang/luci-theme-material) - Inspiration
+
+---
+
+<div align="center">
+
+**Made with ❤️ for PeDitXOS**
+
+[⬆ Back to Top](#-peDitxosui---modern-luci-theme-for-openwrt)
+
+</div>

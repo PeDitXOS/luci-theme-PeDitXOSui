@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PeDitXOSui Theme Preview</title>
+    <link rel="stylesheet" href="luasrc/style/peditxosui.css">
+    <link rel="stylesheet" href="luasrc/style/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <div class="peeditxos-container">
+        <!-- Sidebar -->
+        <aside class="peeditxos-sidebar" id="sidebar">
+            <div class="peeditxos-logo">
+                <span class="peeditxos-logo-text">PeDitXOS</span>
+            </div>
+
+            <nav class="peeditxos-nav" id="mainmenu">
+                <div class="peeditxos-nav-section-title">Menu</div>
+                <a href="#" class="peeditxos-nav-item active">
+                    <i class="fa-solid fa-house"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="peeditxos-nav-item">
+                    <i class="fa-solid fa-wifi"></i>
+                    <span>Wireless</span>
+                </a>
+                <a href="#" class="peeditxos-nav-item">
+                    <i class="fa-solid fa-network-wired"></i>
+                    <span>Network</span>
+                </a>
+                <a href="#" class="peeditxos-nav-item">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>Firewall</span>
+                </a>
+            </nav>
+
+            <div class="peeditxos-nav-section-title">System</div>
+            <nav class="peeditxos-nav" id="systemmenu">
+                <a href="#" class="peeditxos-nav-item">
+                    <i class="fa-solid fa-gear"></i>
+                    <span>Settings</span>
+                </a>
+                <a href="#" class="peeditxos-nav-item">
+                    <i class="fa-solid fa-hard-drive"></i>
+                    <span>Storage</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Area -->
+        <main class="peeditxos-main">
+            <!-- Top Header -->
+            <header class="peeditxos-header">
+                <div class="peeditxos-header-left">
+                    <button class="peeditxos-btn-ghost peeditxos-menu-toggle" id="menuToggle">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <div>
+                        <h1 class="peeditxos-header-title">Dashboard</h1>
+                        <span class="peeditxos-header-subtitle">PeDitXOS Router Manager</span>
+                    </div>
+                </div>
+                <div class="peeditxos-header-actions">
+                    <button class="peeditxos-btn-ghost" id="themeToggle" title="Toggle Theme">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
+                    <button class="peeditxos-btn-ghost" id="fullscreenToggle" title="Fullscreen">
+                        <i class="fa-solid fa-expand"></i>
+                    </button>
+                    <div class="peeditxos-user-menu">
+                        <span class="peeditxos-user-name">root</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="peeditxos-main-content">
+                <div class="peeditxos-dashboard">
+                    <!-- Quick Status -->
+                    <div class="peeditxos-grid peeditxos-grid-2">
+                        <div class="peeditxos-card">
+                            <div class="peeditxos-card-header">
+                                <h3 class="peeditxos-card-title">
+                                    <i class="fa-solid fa-signal"></i>
+                                    Quick Status
+                                </h3>
+                                <span class="peeditxos-card-badge">DEVICES ONLINE: 5</span>
+                            </div>
+                            <div class="peeditxos-quick-status">
+                                <div class="peeditxos-status-circle">
+                                    <svg viewBox="0 0 160 160">
+                                        <circle class="bg" cx="80" cy="80" r="70"></circle>
+                                        <circle class="progress" cx="80" cy="80" r="70"></circle>
+                                    </svg>
+                                    <div class="peeditxos-status-value">
+                                        <div class="peeditxos-status-percent">75%</div>
+                                        <div class="peeditxos-status-label">Online</div>
+                                    </div>
+                                </div>
+                                <div class="peeditxos-status-info">
+                                    <div class="peeditxos-status-item">
+                                        <div class="peeditxos-status-icon download">
+                                            <i class="fa-solid fa-arrow-down"></i>
+                                        </div>
+                                        <div class="peeditxos-status-text">
+                                            <span class="peeditxos-status-title">Download</span>
+                                            <span class="peeditxos-status-speed">45 Mbps</span>
+                                        </div>
+                                    </div>
+                                    <div class="peeditxos-status-item">
+                                        <div class="peeditxos-status-icon upload">
+                                            <i class="fa-solid fa-arrow-up"></i>
+                                        </div>
+                                        <div class="peeditxos-status-text">
+                                            <span class="peeditxos-status-title">Upload</span>
+                                            <span class="peeditxos-status-speed">12 Mbps</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="peeditxos-card">
+                            <div class="peeditxos-card-header">
+                                <h3 class="peeditxos-card-title">
+                                    <i class="fa-solid fa-chart-line"></i>
+                                    Traffic Monitor
+                                </h3>
+                                <span class="peeditxos-card-badge">CPU: 23%</span>
+                            </div>
+                            <div class="peeditxos-chart">
+                                <canvas id="trafficChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System Info -->
+                    <div class="peeditxos-grid peeditxos-grid-2">
+                        <div class="peeditxos-card">
+                            <div class="peeditxos-card-header">
+                                <h3 class="peeditxos-card-title">
+                                    <i class="fa-solid fa-desktop"></i>
+                                    System Info
+                                </h3>
+                            </div>
+                            <div class="peeditxos-system-info">
+                                <div class="peeditxos-info-item">
+                                    <span class="peeditxos-info-label">Hostname</span>
+                                    <span class="peeditxos-info-value">peditxos-router</span>
+                                </div>
+                                <div class="peeditxos-info-item">
+                                    <span class="peeditxos-info-label">Model</span>
+                                    <span class="peeditxos-info-value">GL.iNet GL-MT6000</span>
+                                </div>
+                                <div class="peeditxos-info-item">
+                                    <span class="peeditxos-info-label">Firmware</span>
+                                    <span class="peeditxos-info-value">PeDitXOS 24.10</span>
+                                </div>
+                                <div class="peeditxos-info-item">
+                                    <span class="peeditxos-info-label">Uptime</span>
+                                    <span class="peeditxos-info-value">12d 5h 32m</span>
+                                </div>
+                                <div class="peeditxos-info-item">
+                                    <span class="peeditxos-info-label">CPU</span>
+                                    <span class="peeditxos-info-value">MT7981 ARM Cortex-A53</span>
+                                </div>
+                                <div class="peeditxos-info-item">
+                                    <span class="peeditxos-info-label">Load Average</span>
+                                    <span class="peeditxos-info-value">0.52 / 0.48 / 0.45</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="peeditxos-card">
+                            <div class="peeditxos-card-header">
+                                <h3 class="peeditxos-card-title">
+                                    <i class="fa-solid fa-network-wired"></i>
+                                    Connected Devices
+                                </h3>
+                                <span class="peeditxos-card-badge">5 DEVICES</span>
+                            </div>
+                            <div class="peeditxos-table-container">
+                                <table class="peeditxos-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>IP Address</th>
+                                            <th>Signal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <div class="peeditxos-device-info">
+                                                    <div class="peeditxos-device-icon">
+                                                        <i class="fa-solid fa-laptop"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="peeditxos-device-name">MacBook-Pro</div>
+                                                        <div class="peeditxos-device-type">Laptop</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>192.168.1.100</td>
+                                            <td>
+                                                <div class="peeditxos-signal">
+                                                    <span class="peeditxos-text-success">95%</span>
+                                                    <div class="peeditxos-signal-bars">
+                                                        <div class="peeditxos-signal-bar active" style="height: 4px;"></div>
+                                                        <div class="peeditxos-signal-bar active" style="height: 8px;"></div>
+                                                        <div class="peeditxos-signal-bar active" style="height: 12px;"></div>
+                                                        <div class="peeditxos-signal-bar active" style="height: 16px;"></div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div class="peeditxos-device-info">
+                                                    <div class="peeditxos-device-icon">
+                                                        <i class="fa-solid fa-mobile"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="peeditxos-device-name">iPhone-15</div>
+                                                        <div class="peeditxos-device-type">Phone</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>192.168.1.101</td>
+                                            <td>
+                                                <div class="peeditxos-signal">
+                                                    <span class="peeditxos-text-success">88%</span>
+                                                    <div class="peeditxos-signal-bars">
+                                                        <div class="peeditxos-signal-bar active" style="height: 4px;"></div>
+                                                        <div class="peeditxos-signal-bar active" style="height: 8px;"></div>
+                                                        <div class="peeditxos-signal-bar active" style="height: 12px;"></div>
+                                                        <div class="peeditxos-signal-bar" style="height: 16px;"></div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div class="peeditxos-device-info">
+                                                    <div class="peeditxos-device-icon">
+                                                        <i class="fa-solid fa-tv"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="peeditxos-device-name">Smart-TV</div>
+                                                        <div class="peeditxos-device-type">TV</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>192.168.1.102</td>
+                                            <td>
+                                                <div class="peeditxos-signal">
+                                                    <span class="peeditxos-text-warning">72%</span>
+                                                    <div class="peeditxos-signal-bars">
+                                                        <div class="peeditxos-signal-bar active" style="height: 4px;"></div>
+                                                        <div class="peeditxos-signal-bar active" style="height: 8px;"></div>
+                                                        <div class="peeditxos-signal-bar" style="height: 12px;"></div>
+                                                        <div class="peeditxos-signal-bar" style="height: 16px;"></div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Main Modules -->
+                    <div class="peeditxos-card">
+                        <div class="peeditxos-card-header">
+                            <h3 class="peeditxos-card-title">
+                                <i class="fa-solid fa-th-large"></i>
+                                Main Modules
+                            </h3>
+                        </div>
+                        <div class="peeditxos-modules">
+                            <a href="#" class="peeditxos-module">
+                                <div class="peeditxos-module-icon wifi">
+                                    <i class="fa-solid fa-wifi"></i>
+                                </div>
+                                <span class="peeditxos-module-label">WiFi Settings</span>
+                            </a>
+                            <a href="#" class="peeditxos-module">
+                                <div class="peeditxos-module-icon devices">
+                                    <i class="fa-solid fa-laptop"></i>
+                                </div>
+                                <span class="peeditxos-module-label">Connected Devices</span>
+                            </a>
+                            <a href="#" class="peeditxos-module">
+                                <div class="peeditxos-module-icon traffic">
+                                    <i class="fa-solid fa-chart-simple"></i>
+                                </div>
+                                <span class="peeditxos-module-label">Traffic Monitor</span>
+                            </a>
+                            <a href="#" class="peeditxos-module">
+                                <div class="peeditxos-module-icon firewall">
+                                    <i class="fa-solid fa-shield-halved"></i>
+                                </div>
+                                <span class="peeditxos-module-label">Firewall</span>
+                            </a>
+                            <a href="#" class="peeditxos-module">
+                                <div class="peeditxos-module-icon system">
+                                    <i class="fa-solid fa-microchip"></i>
+                                </div>
+                                <span class="peeditxos-module-label">System Info</span>
+                            </a>
+                            <a href="#" class="peeditxos-module">
+                                <div class="peeditxos-module-icon updates">
+                                    <i class="fa-solid fa-cloud-arrow-down"></i>
+                                </div>
+                                <span class="peeditxos-module-label">Software Updates</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Navbar -->
+                    <nav class="peeditxos-navbar" id="bottomNavbar">
+                        <div class="peeditxos-navbar-inner">
+                            <a href="#" class="peeditxos-navbar-item active">
+                                <i class="fa-solid fa-house"></i>
+                                <span>Home</span>
+                            </a>
+                            <a href="#" class="peeditxos-navbar-item">
+                                <i class="fa-solid fa-wifi"></i>
+                                <span>WiFi</span>
+                            </a>
+                            <a href="#" class="peeditxos-navbar-item">
+                                <i class="fa-solid fa-network-wired"></i>
+                                <span>Devices</span>
+                            </a>
+                            <a href="#" class="peeditxos-navbar-item">
+                                <i class="fa-solid fa-terminal"></i>
+                                <span>Terminal</span>
+                            </a>
+                            <a href="#" class="peeditxos-navbar-item">
+                                <i class="fa-solid fa-gear"></i>
+                                <span>System</span>
+                            </a>
+                        </div>
+                    </nav>
+
+                    <!-- Footer Badge -->
+                    <div class="peeditxos-footer-badge">
+                        Designed for <strong>PeDitXOS</strong>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Sidebar Overlay -->
+    <div class="peeditxos-overlay" id="sidebarOverlay"></div>
+
+    <script src="luasrc/dashboard.js"></script>
+    <script>
+        // Theme Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+
+        themeToggle.addEventListener('click', () => {
+            const current = html.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            const icon = themeToggle.querySelector('i');
+            icon.className = next === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+        });
+
+        // Sidebar Toggle
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        });
+
+        overlay.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+        });
+
+        // Fullscreen Toggle
+        const fullscreenToggle = document.getElementById('fullscreenToggle');
+        fullscreenToggle.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+                fullscreenToggle.querySelector('i').className = 'fa-solid fa-compress';
+            } else {
+                document.exitFullscreen();
+                fullscreenToggle.querySelector('i').className = 'fa-solid fa-expand';
+            }
+        });
+    </script>
+</body>
+</html>

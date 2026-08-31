@@ -3,9 +3,40 @@ bin-debug/
 bin-release/
 [Oo]bj/
 [Bb]in/
+build/
+dist/
+*.ipk
 
 # Other files and folders
 .settings/
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Node modules (if using build tools)
+node_modules/
+package-lock.json
+
+# Logs
+*.log
+npm-debug.log*
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
 
 # Executables
 *.swf
@@ -13,6 +44,12 @@ bin-release/
 *.ipa
 *.apk
 
-# Project files, i.e. `.project`, `.actionScriptProperties` and `.flexProperties`
-# should NOT be excluded as they contain compiler settings and other important
-# information for Eclipse / Flash Builder.
+# Project files
+.project
+.actionScriptProperties
+.flexProperties
+
+# Environment files
+.env
+.env.local
+.env.*.local

@@ -1,16 +1,16 @@
-# LuCI PeDitX Theme
-# Copyright 2024 PeDitX <pedram.ale@me.com>
+# LuCI PeDitXOSui Theme
+# Copyright 2025 PeDitX <pedram.ale@me.com>
 #
 # Licensed under the Apache License v2.0
 # http://www.apache.org/licenses/LICENSE-2.0
 
 include $(TOPDIR)/rules.mk
 
-THEME_NAME:=peditx
-THEME_TITLE:=PeDitX
+THEME_NAME:=peditxosui
+THEME_TITLE:=PeDitXOSui
 
 PKG_NAME:=luci-theme-$(THEME_NAME)
-PKG_VERSION:=1.2.3
+PKG_VERSION:=1.0.0
 PKG_RELEASE:=01
 
 include $(INCLUDE_DIR)/package.mk
@@ -19,8 +19,8 @@ define Package/luci-theme-$(THEME_NAME)
   SECTION:=luci
   CATEGORY:=LuCI
   SUBMENU:=4. Themes
-  DEPENDS:=+libc
-  TITLE:=LuCi Theme For OpenWrt - $(THEME_TITLE)
+  DEPENDS:=+luci-base
+  TITLE:=LuCI Theme For OpenWrt - $(THEME_TITLE)
   URL:=http://t.me/peditx
   PKGARCH:=all
 endef
@@ -33,28 +33,32 @@ endef
 
 define Package/luci-theme-$(THEME_NAME)/install
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
-	echo "uci set luci.themes.$(THEME_TITLE)=/luci-static/$(THEME_NAME); uci commit luci" > $(1)/etc/uci-defaults/30-luci-theme-$(THEME_NAME)
+	$(INSTALL_BIN) ./root/etc/uci-defaults/30-luci-theme-$(THEME_NAME) $(1)/etc/uci-defaults/
 	$(INSTALL_DIR) $(1)/www/luci-static/$(THEME_NAME)
-	$(CP) -a ./luasrc/* $(1)/www/luci-static/$(THEME_NAME)/ 2>/dev/null || true
+	$(CP) -a ./luasrc/style $(1)/www/luci-static/$(THEME_NAME)/ 2>/dev/null || true
+	$(CP) -a ./luasrc/fonts $(1)/www/luci-static/$(THEME_NAME)/ 2>/dev/null || true
+	$(CP) -a ./luasrc/peds $(1)/www/luci-static/$(THEME_NAME)/ 2>/dev/null || true
+	$(CP) -a ./luasrc/manifest.json $(1)/www/luci-static/$(THEME_NAME)/ 2>/dev/null || true
+	$(CP) -a ./luasrc/*.js $(1)/www/luci-static/$(THEME_NAME)/ 2>/dev/null || true
+	$(CP) -a ./luasrc/*.png $(1)/www/luci-static/$(THEME_NAME)/ 2>/dev/null || true
+	$(CP) -a ./luasrc/*.ico $(1)/www/luci-static/$(THEME_NAME)/ 2>/dev/null || true
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view/themes/$(THEME_NAME)
 	$(CP) -a ./template/* $(1)/usr/lib/lua/luci/view/themes/$(THEME_NAME)/ 2>/dev/null || true
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view/$(THEME_NAME)
+	$(CP) -a ./luasrc/view/$(THEME_NAME)/* $(1)/usr/lib/lua/luci/view/$(THEME_NAME)/ 2>/dev/null || true
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/controller
+	$(CP) -a ./luasrc/controller/*.lua $(1)/usr/lib/lua/luci/controller/ 2>/dev/null || true
 	$(INSTALL_DIR) $(1)/www/luci-static/resources
 	$(CP) -a ./js/* $(1)/www/luci-static/resources/ 2>/dev/null || true
-	$(INSTALL_DIR) $(1)/www/luci-static/$(THEME_NAME)
-	$(CP) -a ./luasrc/manifest.json $(1)/www/luci-static/$(THEME_NAME)/ 2>/dev/null || true
 	$(INSTALL_DIR) $(1)/etc/config
 	$(CP) -a ./root/etc/config/* $(1)/etc/config/ 2>/dev/null || true
 endef
 
-define Package/luci-theme-$(THEME_NAME)/postinst
+define Package/luci-theme-$(THEME_NAME)/postrm
 #!/bin/sh
 [ -n "$${IPKG_INSTROOT}" ] || {
-	uci get luci.themes.peditx >/dev/null 2>&1 || \
-	uci batch <<-EOF
-		set luci.themes.peditx=/luci-static/$(THEME_NAME)
-		set luci.main.mediaurlbase=/luci-static/$(THEME_NAME)
-		commit luci
-	EOF
+	uci -q delete luci.themes.PeDitXOSui
+	uci commit luci
 }
 exit 0
 endef

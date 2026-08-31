@@ -1,127 +1,134 @@
 <%#
-	PeDitXrt is made from me for all ..
-	luci-theme-peditx
-	Copyright 2024 PeDitX <t.me/peditx>
-	Have a bug? Please create an issue here on GitHub!
-
-	luci-theme-material
-	Copyright 2015 Lutty Yang <lutty@wcan.in>
-
-	luci-theme-bootstrap:
-	Copyright 2008 Steven Barth <steven@midlink.org>
-	Copyright 2008 Jo-Philipp Wich <jow@openwrt.org>
-	Copyright 2012 David Menting <david@nut-bolt.nl>
-
-	MUI:
-	https://github.com/muicss/mui
-
-	Licensed to the public under the Apache License 2.0
+	PeDitXOSui Theme Footer
+	Copyright 2025 PeDitX <t.me/peditx>
 -%>
-<% 
+<%
 local ver = require "luci.version"
 local uci = require "luci.model.uci".cursor()
-local config = uci:get_all("peditx", "theme") or {}
+local config = uci:get_all("peditxosui", "theme") or {}
 
--- Table to store navbar icons
+-- Navbar items
 local icon = {}
-
--- Iterate through all navbar entries
-uci:foreach("peditx", "navbar", function(section)
+uci:foreach("peditxosui", "navbar", function(section)
 	local address = section.address
 	local icon_url = section.icon
-
 	if address and icon_url then
-		-- Remove '/www/luci-static/peditx/' from icon_url
-		icon_url = string.gsub(icon_url, "^/www/luci%-static/peditx/", "")
+		icon_url = string.gsub(icon_url, "^/www/luci%-static/peditxosui/", "")
 		icon[address] = icon_url
 	end
 end)
 
--- Check navbar enable status
-local navbar_enabled = config.navbar == "1"
-
--- Calculate number of enabled navbar links
+local navbar_enabled = config.navbar ~= "0"
 local num_links = 0
-uci:foreach("peditx", "navbar", function(section)
+uci:foreach("peditxosui", "navbar", function(section)
 	if section.enable == "Enable" then
 		num_links = num_links + 1
 	end
 end)
-
--- Calculate link width for responsive design
-local link_width = string.format("calc(100%% / %d)", num_links)
-
--- Retrieve theme properties
-local background_color = config.color or '#2222359a'
-local blur_value = tonumber(config.blur) or 20
-local link_blur = string.format("blur(%dpx)", blur_value)
 %>
 
-<style>
-.main > .main-left, .cbi-section, .cbi-section-error, #iptables, .Firewall form, #cbi-network > .cbi-section-node, #cbi-wireless > .cbi-section-node, #cbi-wireless > #wifi_assoclist_table, [data-tab-title], [data-page^="admin-system-admin"]:not(.node-main-login) .cbi-map:not(#cbi-dropbear), [data-page="admin-system-opkg"] #maincontent > .container, .tabs, .cbi-tabmenu, .cbi-tooltip {
-	background-color: <%=background_color%>;
-	backdrop-filter: <%=link_blur%>;
-	-webkit-backdrop-filter: <%=link_blur%>;
-}
+			</div><!-- #maincontent -->
+		</main>
 
-@media screen and (max-width: 720px) {
-	.navbar a {
-		width: <%=link_width%>;
+		<!-- Bottom Navbar (Mobile Friendly) -->
+		<% if navbar_enabled then %>
+		<nav class="peeditxos-navbar" id="bottomNavbar">
+			<div class="peeditxos-navbar-inner">
+				<%
+				uci:foreach("peditxosui", "navbar", function(section)
+					local address = section.address
+					local icon_url = icon[address] or 'default/icon.png'
+					local target_blank = section.newtab == "Yes" and 'target="_blank"' or ''
+					if section.enable == "Enable" then
+				%>
+				<a href="<%=address%>" <%=target_blank%> class="peeditxos-navbar-item">
+					<img src="<%=media%>/<%=icon_url%>" alt="<%=section.name%>" class="peeditxos-navbar-icon">
+					<span class="peeditxos-navbar-label"><%=section.name%></span>
+				</a>
+				<%
+					end
+				end)
+				%>
+			</div>
+		</nav>
+		<% end %>
+	</div><!-- .peeditxos-container -->
+
+	<!-- Sidebar Overlay for Mobile -->
+	<div class="peeditxos-overlay" id="sidebarOverlay"></div>
+
+	<script type="text/javascript">L.require('menu-peditxosui')</script>
+	<script src="<%=media%>/app.js"></script>
+	<script src="<%=media%>/dashboard.js"></script>
+
+	<script>
+	// Theme Toggle
+	const themeToggle = document.getElementById('themeToggle');
+	const html = document.documentElement;
+
+	const savedTheme = localStorage.getItem('peeditxos-theme') || 'dark';
+	html.setAttribute('data-theme', savedTheme);
+	updateThemeIcon(savedTheme);
+
+	if (themeToggle) {
+		themeToggle.addEventListener('click', () => {
+			const current = html.getAttribute('data-theme');
+			const next = current === 'dark' ? 'light' : 'dark';
+			html.setAttribute('data-theme', next);
+			localStorage.setItem('peeditxos-theme', next);
+			updateThemeIcon(next);
+		});
 	}
-}
 
-<% if not navbar_enabled then %>
-.navbar {
-	display: none;
-}
-<% end %>
-</style>
-
-</div>
-<footer class="mobile">
-	<a href="https://github.com/peditx/luci-theme-peditx"><%=ver.luciname%> | PeDitX Theme v1.2.3r01</a>
-</footer>
-</div>
-<div class="navbar active">
-	<% if navbar_enabled then %>
-	<div class="dropdown">
-		<% 
-		uci:foreach("peditx", "navbar", function(section)
-			local address = section.address
-			local icon_url = icon[address] or 'default/icon.png'
-			local target_blank = section.newtab == "Yes" and 'target="_blank"' or ''
-
-			if section.enable == "Enable" then
-		%>
-			<a href="<%=address%>" <%=target_blank%>>
-				<img src="<%=media%>/<%=icon_url%>" />
-			</a>
-		<% 
-			end
-		end)
-		%>
-	</div>
-	<% end %>
-	<label class="toggler">
-		<img src="<%=media%>/peds/icon/arrow.svg">
-	</label>
-</div>
-<script>
-{
-	const nav = document.querySelector(".navbar");
-	let lastScrollY = window.scrollY;
-	window.addEventListener("scroll", () => {
-		if (lastScrollY < window.scrollY) {
-			nav.classList.add("navbar--hidden");
-		} else {
-			nav.classList.remove("navbar--hidden");
+	function updateThemeIcon(theme) {
+		if (themeToggle) {
+			const icon = themeToggle.querySelector('i');
+			if (icon) {
+				icon.className = theme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+			}
 		}
-		lastScrollY = window.scrollY;
+	}
+
+	// Sidebar Toggle (Mobile)
+	const menuToggle = document.getElementById('menuToggle');
+	const sidebar = document.getElementById('sidebar');
+	const overlay = document.getElementById('sidebarOverlay');
+
+	if (menuToggle && sidebar) {
+		menuToggle.addEventListener('click', () => {
+			sidebar.classList.toggle('active');
+			overlay.classList.toggle('active');
+		});
+	}
+
+	if (overlay) {
+		overlay.addEventListener('click', () => {
+			sidebar.classList.remove('active');
+			overlay.classList.remove('active');
+		});
+	}
+
+	// Fullscreen Toggle
+	const fullscreenToggle = document.getElementById('fullscreenToggle');
+	if (fullscreenToggle) {
+		fullscreenToggle.addEventListener('click', () => {
+			if (!document.fullscreenElement) {
+				document.documentElement.requestFullscreen();
+				fullscreenToggle.querySelector('i').className = 'fa-solid fa-compress';
+			} else {
+				document.exitFullscreen();
+				fullscreenToggle.querySelector('i').className = 'fa-solid fa-expand';
+			}
+		});
+	}
+
+	// Active Nav Item
+	const currentPath = window.location.pathname;
+	document.querySelectorAll('.peeditxos-nav-item, .peeditxos-navbar-item').forEach(item => {
+		if (item.getAttribute('href') === currentPath) {
+			item.classList.add('active');
+		}
 	});
-}
-</script>
-</div>
-<script type="text/javascript">L.require('menu-peditx')</script>
-<script src="<%=media%>/app.js"></script>
+	</script>
 </body>
 </html>
