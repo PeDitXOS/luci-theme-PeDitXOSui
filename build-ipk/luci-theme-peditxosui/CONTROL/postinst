@@ -1,9 +1,0 @@
-#!/bin/sh
-[ -n "${IPKG_INSTROOT}" ] || {
-    uci -q batch << UCI
-set luci.themes.PeDitXOSui=/luci-static/peditxosui
-set luci.main.mediaurlbase=/luci-static/peditxosui
-commit luci
-UCI
-}
-exit 0

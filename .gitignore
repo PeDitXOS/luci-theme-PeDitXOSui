@@ -22,3 +22,9 @@ node_modules/
 
 # Preview server
 .claude/launch.json
+
+# Build output
+build-ipk/
+build-apk/
+artifacts-ipk/
+artifacts-apk/
