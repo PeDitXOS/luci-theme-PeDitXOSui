@@ -170,6 +170,7 @@
         else return 20 end
     end
 %>
+<%+header%>
 
 <div class="peeditxos-dashboard">
     <!-- Quick Status -->
@@ -467,11 +468,11 @@
                     <span class="peeditxos-activity-time"><%=iface.ip%></span>
                 </div>
                 <% end %>
-                <% for i, device in ipairs(devices) do %>
+                <% for i, lease in ipairs(dhcp_leases) do %>
                 <div class="peeditxos-activity-item">
                     <div class="peeditxos-activity-dot" style="background: var(--accent-secondary);"></div>
-                    <span class="peeditxos-activity-text">Device Connected: <%=device.name or "Unknown"%></span>
-                    <span class="peeditxos-activity-time"><%=device.ip%></span>
+                    <span class="peeditxos-activity-text">Device Connected: <%=lease.hostname or "Unknown"%></span>
+                    <span class="peeditxos-activity-time"><%=lease.ipaddr or ""%></span>
                 </div>
                 <% end %>
             </div>
@@ -525,3 +526,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
+<%+footer%>
