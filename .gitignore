@@ -1,55 +1,24 @@
-# Build and Release Folders
-bin-debug/
-bin-release/
-[Oo]bj/
-[Bb]in/
-build/
-dist/
-*.ipk
+# Build artifacts
+bin/
+build_dir/
+staging_dir/
+tmp/
+logs/
 
-# Other files and folders
-.settings/
-.idea/
-.vscode/
+# SDK files
+openwrt-sdk-*.tar.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
 *.swp
 *.swo
 *~
 
-# OS generated files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# Node modules (if using build tools)
+# Node modules
 node_modules/
-package-lock.json
 
-# Logs
-*.log
-npm-debug.log*
-
-# Temporary files
-tmp/
-temp/
-*.tmp
-*.bak
-
-# Executables
-*.swf
-*.air
-*.ipa
-*.apk
-
-# Project files
-.project
-.actionScriptProperties
-.flexProperties
-
-# Environment files
-.env
-.env.local
-.env.*.local
+# Preview server
+.claude/launch.json

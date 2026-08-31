@@ -1,0 +1,131 @@
+<%#
+	PeDitXOSui Theme
+	Copyright 2025 PeDitX <t.me/peditx>
+
+	Licensed to the public under the Apache License 2.0
+-%>
+<%
+	local sys  = require "luci.sys"
+	local util = require "luci.util"
+	local http = require "luci.http"
+	local disp = require "luci.dispatcher"
+	local ver  = require "luci.version"
+	local uci  = require "luci.model.uci".cursor()
+
+	local boardinfo = util.ubus("system", "board") or { }
+	local node = disp.context.dispatched
+	local path = table.concat(disp.context.path, "-")
+
+	-- Theme config
+	local theme_config = uci:get_all("peditxosui", "theme") or {}
+	local blur_value = tonumber(theme_config.blur) or 10
+	local navbar_enabled = theme_config.navbar ~= "0"
+
+	-- Get navbar items
+	local navbar_items = {}
+	uci:foreach("peditxosui", "navbar", function(section)
+		if section.enable == "Enable" then
+			local icon_url = section.icon or ""
+			icon_url = string.gsub(icon_url, "^/www/luci%-static/peditxosui/", "")
+			table.insert(navbar_items, {
+				name = section.name or "",
+				icon = icon_url,
+				address = section.address or "#",
+				newtab = section.newtab == "Yes"
+			})
+		end
+	end)
+
+	http.prepare_content("text/html; charset=UTF-8")
+-%>
+<!DOCTYPE html>
+<html lang="<%=luci.i18n.context.lang%>" data-theme="dark">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="mobile-web-app-capable" content="yes">
+	<meta name="theme-color" content="#0a0e1a">
+	<meta name="msapplication-tap-highlight" content="no">
+	<meta name="application-name" content="PeDitXOSui - LuCI">
+	<meta name="apple-mobile-web-app-title" content="PeDitXOSui - LuCI">
+
+	<title><%=striptags( (boardinfo.hostname or "?") .. ( (node and node.title) and ' - ' .. translate(node.title) or '')) %> - PeDitXOSui</title>
+
+	<link rel="stylesheet" href="<%=media%>/style/peditxosui.css">
+	<link rel="stylesheet" href="<%=media%>/style/dashboard.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+	<link rel="stylesheet" href="<%=media%>/peds/peds.css">
+	<link rel="shortcut icon" href="<%=media%>/favicon.ico">
+	<link rel="manifest" href="/luci-static/peditxosui/manifest.json">
+
+	<style>
+		.peeditxos-main-content {
+			backdrop-filter: blur(<%=blur_value%>px);
+			-webkit-backdrop-filter: blur(<%=blur_value%>px);
+		}
+	</style>
+
+	<% if node and node.css then %>
+	<link rel="stylesheet" href="<%=resource%>/<%=node.css%>">
+	<% end -%>
+
+	<script src="<%=url('admin/translations', luci.i18n.context.lang)%>?v=git-21.295.66888-fc702bc"></script>
+	<script src="<%=resource%>/cbi.js?v=git-21.295.66888-fc702bc"></script>
+
+	<% if css then %>
+	<style title="text/css"><%= css %></style>
+	<% end -%>
+</head>
+<body>
+	<div class="peeditxos-container">
+		<!-- Sidebar -->
+		<aside class="peeditxos-sidebar" id="sidebar">
+			<div class="peeditxos-logo">
+				<img src="<%=media%>/brand.png" alt="PeDitXOSui">
+				<span class="peeditxos-logo-text">PeDitXOS</span>
+			</div>
+
+			<nav class="peeditxos-nav" id="mainmenu">
+				<div class="peeditxos-nav-section-title">Menu</div>
+			</nav>
+
+			<div class="peeditxos-nav-section-title">System Tools</div>
+			<nav class="peeditxos-nav" id="systemmenu">
+			</nav>
+		</aside>
+
+		<!-- Main Area -->
+		<main class="peeditxos-main">
+			<!-- Top Header -->
+			<header class="peeditxos-header">
+				<div class="peeditxos-header-left">
+					<button class="peeditxos-btn-ghost peeditxos-menu-toggle" id="menuToggle">
+						<i class="fa-solid fa-bars"></i>
+					</button>
+					<div>
+						<h1 class="peeditxos-header-title">
+							<%=striptags( (node and node.title) or translate("Status") )%>
+						</h1>
+						<span class="peeditxos-header-subtitle">Desktop | OpenWrt Manager</span>
+					</div>
+				</div>
+				<div class="peeditxos-header-actions">
+					<button class="peeditxos-btn-ghost" id="themeToggle" title="Toggle Theme">
+						<i class="fa-solid fa-moon"></i>
+					</button>
+					<button class="peeditxos-btn-ghost" id="fullscreenToggle" title="Fullscreen">
+						<i class="fa-solid fa-expand"></i>
+					</button>
+					<div class="peeditxos-user-menu">
+						<span class="peeditxos-user-name"><%=os.getenv("USER") or "root"%></span>
+					</div>
+				</div>
+			</header>
+
+			<!-- Tab Menu -->
+			<div id="tabmenu" class="peeditxos-tabs"></div>
+
+			<!-- Page Content -->
+			<div class="peeditxos-main-content">
+				<div id="maincontent" class="container">

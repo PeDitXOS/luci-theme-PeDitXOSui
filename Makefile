@@ -1,66 +1,43 @@
 # LuCI PeDitXOSui Theme
-# Copyright 2025 PeDitX <pedram.ale@me.com>
+# Copyright 2025 PeDitX <t.me/peditx>
 #
 # Licensed under the Apache License v2.0
 # http://www.apache.org/licenses/LICENSE-2.0
 
 include $(TOPDIR)/rules.mk
 
-THEME_NAME:=peditxosui
-THEME_TITLE:=PeDitXOSui
+LUCI_TITLE:=PeDitXOSui Theme for LuCI
+LUCI_DEPENDS:=+luci-base
+LUCI_PKGARCH:=all
 
-PKG_NAME:=luci-theme-$(THEME_NAME)
+PKG_NAME:=luci-theme-peditxosui
 PKG_VERSION:=1.0.0
 PKG_RELEASE:=01
 
-include $(INCLUDE_DIR)/package.mk
+PKG_BUILD_DEPENDS:=luci-base/host
 
-define Package/luci-theme-$(THEME_NAME)
-  SECTION:=luci
-  CATEGORY:=LuCI
-  SUBMENU:=4. Themes
-  DEPENDS:=+luci-base
-  TITLE:=LuCI Theme For OpenWrt - $(THEME_TITLE)
-  URL:=http://t.me/peditx
-  PKGARCH:=all
-endef
+include $(TOPDIR)/feeds/luci/luci.mk
 
-define Build/Configure
-endef
+# Define package install
+define Package/luci-theme-peditxosui/install
+	$(INSTALL_DIR) $(1)/www/luci-static/peditxosui
+	$(CP) ./htdocs/luci-static/peditxosui/* $(1)/www/luci-static/peditxosui/
 
-define Build/Compile
-endef
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view/themes/peditxosui
+	$(CP) ./luasrc/view/themes/peditxosui/* $(1)/usr/lib/lua/luci/view/themes/peditxosui/
 
-define Package/luci-theme-$(THEME_NAME)/install
-	$(INSTALL_DIR) $(1)/etc/uci-defaults
-	$(INSTALL_BIN) ./root/etc/uci-defaults/30-luci-theme-$(THEME_NAME) $(1)/etc/uci-defaults/
-	$(INSTALL_DIR) $(1)/www/luci-static/$(THEME_NAME)
-	$(CP) -a ./luasrc/style $(1)/www/luci-static/$(THEME_NAME)/ 2>/dev/null || true
-	$(CP) -a ./luasrc/fonts $(1)/www/luci-static/$(THEME_NAME)/ 2>/dev/null || true
-	$(CP) -a ./luasrc/peds $(1)/www/luci-static/$(THEME_NAME)/ 2>/dev/null || true
-	$(CP) -a ./luasrc/manifest.json $(1)/www/luci-static/$(THEME_NAME)/ 2>/dev/null || true
-	$(CP) -a ./luasrc/*.js $(1)/www/luci-static/$(THEME_NAME)/ 2>/dev/null || true
-	$(CP) -a ./luasrc/*.png $(1)/www/luci-static/$(THEME_NAME)/ 2>/dev/null || true
-	$(CP) -a ./luasrc/*.ico $(1)/www/luci-static/$(THEME_NAME)/ 2>/dev/null || true
-	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view/themes/$(THEME_NAME)
-	$(CP) -a ./template/* $(1)/usr/lib/lua/luci/view/themes/$(THEME_NAME)/ 2>/dev/null || true
-	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view/$(THEME_NAME)
-	$(CP) -a ./luasrc/view/$(THEME_NAME)/* $(1)/usr/lib/lua/luci/view/$(THEME_NAME)/ 2>/dev/null || true
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view/peditxosui
+	$(CP) ./luasrc/view/peditxosui/* $(1)/usr/lib/lua/luci/view/peditxosui/
+
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/controller
-	$(CP) -a ./luasrc/controller/*.lua $(1)/usr/lib/lua/luci/controller/ 2>/dev/null || true
+	$(CP) ./luasrc/controller/*.lua $(1)/usr/lib/lua/luci/controller/
+
 	$(INSTALL_DIR) $(1)/www/luci-static/resources
-	$(CP) -a ./js/* $(1)/www/luci-static/resources/ 2>/dev/null || true
+	$(CP) ./htdocs/luci-static/resources/* $(1)/www/luci-static/resources/
+
+	$(INSTALL_DIR) $(1)/etc/uci-defaults
+	$(INSTALL_BIN) ./root/etc/uci-defaults/30-luci-theme-peditxosui $(1)/etc/uci-defaults/
+
 	$(INSTALL_DIR) $(1)/etc/config
-	$(CP) -a ./root/etc/config/* $(1)/etc/config/ 2>/dev/null || true
+	$(CP) ./root/etc/config/peditxosui $(1)/etc/config/
 endef
-
-define Package/luci-theme-$(THEME_NAME)/postrm
-#!/bin/sh
-[ -n "$${IPKG_INSTROOT}" ] || {
-	uci -q delete luci.themes.PeDitXOSui
-	uci commit luci
-}
-exit 0
-endef
-
-$(eval $(call BuildPackage,luci-theme-$(THEME_NAME)))

@@ -1,0 +1,208 @@
+<%#
+	PeDitXOSui Login Page
+	Copyright 2025 PeDitX <t.me/peditx>
+-%>
+<%
+local sys  = require "luci.sys"
+local util = require "luci.util"
+local http = require "luci.http"
+local uci  = require "luci.model.uci".cursor()
+
+local boardinfo = util.ubus("system", "board") or { }
+local hostname = boardinfo.hostname or "OpenWrt"
+
+-- Theme config
+local theme_config = uci:get_all("peditxosui", "theme") or {}
+local blur_value = tonumber(theme_config.blur) or 10
+
+http.prepare_content("text/html; charset=UTF-8")
+-%>
+<!DOCTYPE html>
+<html lang="<%=luci.i18n.context.lang%>" data-theme="dark">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="mobile-web-app-capable" content="yes">
+	<meta name="theme-color" content="#0a0e1a">
+	<meta name="msapplication-tap-highlight" content="no">
+	<meta name="application-name" content="PeDitXOSui - LuCI">
+	<meta name="apple-mobile-web-app-title" content="PeDitXOSui - LuCI">
+
+	<title>Login - PeDitXOSui</title>
+
+	<link rel="stylesheet" href="/luci-static/peditxosui/style/peditxosui.css">
+	<link rel="stylesheet" href="/luci-static/peditxosui/style/login.css">
+	<link rel="shortcut icon" href="/luci-static/peditxosui/favicon.ico">
+	<link rel="manifest" href="/luci-static/peditxosui/manifest.json">
+
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+	<script src="/cgi-bin/luci/admin/translations/en?v=git-22.339.35089-7af4a64"></script>
+	<script src="/luci-static/resources/cbi.js?v=git-22.339.35089-7af4a64"></script>
+
+	<style>
+		.peeditxos-login-bg {
+			backdrop-filter: blur(<%=blur_value%>px);
+			-webkit-backdrop-filter: blur(<%=blur_value%>px);
+		}
+	</style>
+</head>
+<body class="peeditxos-login-page">
+	<!-- Animated Background -->
+	<div class="peeditxos-login-bg"></div>
+	<div class="peeditxos-login-particles" id="particles"></div>
+
+	<!-- Theme Toggle -->
+	<button class="peeditxos-login-theme-toggle" id="themeToggle">
+		<i class="fa-solid fa-moon"></i>
+	</button>
+
+	<!-- Login Container -->
+	<div class="peeditxos-login-container">
+		<div class="peeditxos-login-card">
+			<!-- Logo -->
+			<div class="peeditxos-login-logo">
+				<img src="/luci-static/peditxosui/brand.png" alt="PeDitXOSui">
+			</div>
+
+			<h1 class="peeditxos-login-title">PeDitXOS</h1>
+			<p class="peeditxos-login-subtitle">OpenWrt Manager</p>
+
+			<!-- Login Form -->
+			<form class="peeditxos-login-form" method="post" action="<%=luci.dispatcher.build_url("admin", "auth", "login")%>">
+				<input type="hidden" name="token" value="<%=luci.context.authtoken%>">
+
+				<div class="peeditxos-form-group">
+					<label class="peeditxos-form-label" for="luci_username">
+						<i class="fa-solid fa-user"></i>
+						Username
+					</label>
+					<input type="text"
+						   class="peeditxos-form-input"
+						   id="luci_username"
+						   name="luci_username"
+						   placeholder="Enter username"
+						   autocomplete="username"
+						   autocorrect="off"
+						   autocapitalize="off"
+						   spellcheck="false"
+						   autofocus>
+				</div>
+
+				<div class="peeditxos-form-group">
+					<label class="peeditxos-form-label" for="luci_password">
+						<i class="fa-solid fa-lock"></i>
+						Password
+					</label>
+					<div class="peeditxos-password-wrapper">
+						<input type="password"
+							   class="peeditxos-form-input"
+							   id="luci_password"
+							   name="luci_password"
+							   placeholder="Enter password"
+							   autocomplete="current-password">
+						<button type="button" class="peeditxos-password-toggle" id="passwordToggle">
+							<i class="fa-solid fa-eye"></i>
+						</button>
+					</div>
+				</div>
+
+				<div class="peeditxos-form-row">
+					<label class="peeditxos-checkbox">
+						<input type="checkbox" name="luci_clear_uci" value="1">
+						<span class="peeditxos-checkbox-mark"></span>
+						<span class="peeditxos-checkbox-label">Clear saved</span>
+					</label>
+				</div>
+
+				<button type="submit" class="peeditxos-btn peeditxos-btn-primary peeditxos-btn-block">
+					<i class="fa-solid fa-right-to-bracket"></i>
+					Sign In
+				</button>
+			</form>
+
+			<!-- Status Message -->
+			<% if luci.http.formvalue("luci_username") and not luci.http.formvalue("luci_username") == "" then %>
+			<div class="peeditxos-login-error">
+				<i class="fa-solid fa-circle-exclamation"></i>
+				Invalid username or password
+			</div>
+			<% end %>
+		</div>
+
+		<!-- Footer -->
+		<div class="peeditxos-login-footer">
+			<span>PeDitXOSui v1.0.0</span>
+			<span>•</span>
+			<span>Designed for <strong>PeDitXOS</strong></span>
+		</div>
+	</div>
+
+	<script>
+	// Password Toggle
+	const passwordToggle = document.getElementById('passwordToggle');
+	const passwordInput = document.getElementById('luci_password');
+
+	if (passwordToggle && passwordInput) {
+		passwordToggle.addEventListener('click', () => {
+			const type = passwordInput.type === 'password' ? 'text' : 'password';
+			passwordInput.type = type;
+			passwordToggle.querySelector('i').className = type === 'password' ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash';
+		});
+	}
+
+	// Theme Toggle
+	const themeToggle = document.getElementById('themeToggle');
+	const html = document.documentElement;
+
+	const savedTheme = localStorage.getItem('peeditxos-theme') || 'dark';
+	html.setAttribute('data-theme', savedTheme);
+	updateThemeIcon(savedTheme);
+
+	if (themeToggle) {
+		themeToggle.addEventListener('click', () => {
+			const current = html.getAttribute('data-theme');
+			const next = current === 'dark' ? 'light' : 'dark';
+			html.setAttribute('data-theme', next);
+			localStorage.setItem('peeditxos-theme', next);
+			updateThemeIcon(next);
+		});
+	}
+
+	function updateThemeIcon(theme) {
+		if (themeToggle) {
+			const icon = themeToggle.querySelector('i');
+			if (icon) {
+				icon.className = theme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+			}
+		}
+	}
+
+	// Particles Animation
+	function createParticles() {
+		const container = document.getElementById('particles');
+		if (!container) return;
+
+		const colors = ['#06b6d4', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#ec4899'];
+
+		for (let i = 0; i < 60; i++) {
+			const particle = document.createElement('div');
+			particle.className = 'peeditxos-particle';
+			particle.style.left = Math.random() * 100 + '%';
+			particle.style.width = (Math.random() * 8 + 4) + 'px';
+			particle.style.height = particle.style.width;
+			particle.style.animationDuration = (Math.random() * 15 + 10) + 's';
+			particle.style.animationDelay = Math.random() * 8 + 's';
+
+			const color = colors[Math.floor(Math.random() * colors.length)];
+			particle.style.background = `linear-gradient(135deg, ${color}, ${color}88)`;
+			particle.style.boxShadow = `0 0 ${Math.random() * 15 + 5}px ${color}80`;
+
+			container.appendChild(particle);
+		}
+	}
+	createParticles();
+	</script>
+</body>
+</html>
