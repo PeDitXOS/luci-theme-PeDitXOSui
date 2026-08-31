@@ -44,7 +44,7 @@ jobs:
         run: |
           set -e
           cd sdk/package
-          git clone https://github.com/PeDitXOS/luci-theme-PeDitXOSui.git
+          git clone https://github.com/PeDitXOS/luci-theme-PeDitXOSui.git luci-theme-peditxosui
           cd ..
           echo "CONFIG_PACKAGE_luci-theme-peditxosui=m" >> .config
 
@@ -95,7 +95,7 @@ jobs:
         run: |
           set -e
           cd sdk/package
-          git clone https://github.com/PeDitXOS/luci-theme-PeDitXOSui.git
+          git clone https://github.com/PeDitXOS/luci-theme-PeDitXOSui.git luci-theme-peditxosui
           cd ..
           echo "CONFIG_PACKAGE_luci-theme-peditxosui=m" >> .config
 
