@@ -1,0 +1,45 @@
+
+config theme 'theme'
+	option color '#0a0e1a'
+	option blur '10'
+	option navbar '1'
+
+config navbar
+	option name 'Home'
+	option enable 'Enable'
+	option line '1'
+	option newtab 'No'
+	option icon '/www/luci-static/peditxosui/peds/icon/navbar/overview.png'
+	option address '/cgi-bin/luci/admin/status/overview'
+
+config navbar
+	option name 'WiFi'
+	option enable 'Enable'
+	option line '2'
+	option newtab 'No'
+	option icon '/www/luci-static/peditxosui/peds/icon/navbar/wifi.png'
+	option address '/cgi-bin/luci/admin/network/wireless'
+
+config navbar
+	option name 'Devices'
+	option enable 'Enable'
+	option line '3'
+	option newtab 'No'
+	option icon '/www/luci-static/peditxosui/peds/icon/navbar/devices.png'
+	option address '/cgi-bin/luci/admin/network/dhcp_leases'
+
+config navbar
+	option name 'Terminal'
+	option enable 'Enable'
+	option line '4'
+	option newtab 'No'
+	option icon '/www/luci-static/peditxosui/peds/icon/navbar/terminal.png'
+	option address '/cgi-bin/luci/admin/services/ttyd'
+
+config navbar
+	option name 'System'
+	option enable 'Enable'
+	option line '5'
+	option newtab 'No'
+	option icon '/www/luci-static/peditxosui/peds/icon/navbar/system.png'
+	option address '/cgi-bin/luci/admin/system/system'

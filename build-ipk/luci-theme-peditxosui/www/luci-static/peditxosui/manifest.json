@@ -1,0 +1,30 @@
+{
+  "name": "PeDitXOSui",
+  "short_name": "PeDitXOS",
+  "description": "Modern OpenWrt LuCI Theme for PeDitXOS",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0a0e1a",
+  "theme_color": "#06b6d4",
+  "categories": ["network", "utilities"],
+  "icons": [
+    {
+      "src": "/luci-static/peditxosui/peds/icon/apple/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/luci-static/peditxosui/peds/icon/apple/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/luci-static/peditxosui/peds/icon/apple/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}
