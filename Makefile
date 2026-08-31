@@ -6,38 +6,55 @@
 
 include $(TOPDIR)/rules.mk
 
-LUCI_TITLE:=PeDitXOSui Theme for LuCI
-LUCI_DEPENDS:=+luci-base
-LUCI_PKGARCH:=all
+THEME_NAME:=peditxosui
+THEME_TITLE:=PeDitXOSui
 
-PKG_NAME:=luci-theme-peditxosui
+PKG_NAME:=luci-theme-$(THEME_NAME)
 PKG_VERSION:=1.0.0
 PKG_RELEASE:=01
 
-PKG_BUILD_DEPENDS:=luci-base/host
+include $(INCLUDE_DIR)/package.mk
 
-include $(TOPDIR)/feeds/luci/luci.mk
-
-# Define package install
-define Package/luci-theme-peditxosui/install
-	$(INSTALL_DIR) $(1)/www/luci-static/peditxosui
-	$(CP) ./htdocs/luci-static/peditxosui/* $(1)/www/luci-static/peditxosui/
-
-	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view/themes/peditxosui
-	$(CP) ./luasrc/view/themes/peditxosui/* $(1)/usr/lib/lua/luci/view/themes/peditxosui/
-
-	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view/peditxosui
-	$(CP) ./luasrc/view/peditxosui/* $(1)/usr/lib/lua/luci/view/peditxosui/
-
-	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/controller
-	$(CP) ./luasrc/controller/*.lua $(1)/usr/lib/lua/luci/controller/
-
-	$(INSTALL_DIR) $(1)/www/luci-static/resources
-	$(CP) ./htdocs/luci-static/resources/* $(1)/www/luci-static/resources/
-
-	$(INSTALL_DIR) $(1)/etc/uci-defaults
-	$(INSTALL_BIN) ./root/etc/uci-defaults/30-luci-theme-peditxosui $(1)/etc/uci-defaults/
-
-	$(INSTALL_DIR) $(1)/etc/config
-	$(CP) ./root/etc/config/peditxosui $(1)/etc/config/
+define Package/luci-theme-$(THEME_NAME)
+  SECTION:=luci
+  CATEGORY:=LuCI
+  SUBMENU:=4. Themes
+  DEPENDS:=+luci-base
+  TITLE:=LuCI Theme For OpenWrt - $(THEME_TITLE)
+  URL:=http://t.me/peditx
+  PKGARCH:=all
 endef
+
+define Build/Configure
+endef
+
+define Build/Compile
+endef
+
+define Package/luci-theme-$(THEME_NAME)/install
+	$(INSTALL_DIR) $(1)/www/luci-static/$(THEME_NAME)
+	$(CP) -a ./htdocs/luci-static/$(THEME_NAME)/* $(1)/www/luci-static/$(THEME_NAME)/ 2>/dev/null || true
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view/themes/$(THEME_NAME)
+	$(CP) -a ./luasrc/view/themes/$(THEME_NAME)/* $(1)/usr/lib/lua/luci/view/themes/$(THEME_NAME)/ 2>/dev/null || true
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view/$(THEME_NAME)
+	$(CP) -a ./luasrc/view/$(THEME_NAME)/* $(1)/usr/lib/lua/luci/view/$(THEME_NAME)/ 2>/dev/null || true
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/controller
+	$(CP) -a ./luasrc/controller/*.lua $(1)/usr/lib/lua/luci/controller/ 2>/dev/null || true
+	$(INSTALL_DIR) $(1)/www/luci-static/resources
+	$(CP) -a ./htdocs/luci-static/resources/* $(1)/www/luci-static/resources/ 2>/dev/null || true
+	$(INSTALL_DIR) $(1)/etc/uci-defaults
+	$(INSTALL_BIN) ./root/etc/uci-defaults/30-luci-theme-$(THEME_NAME) $(1)/etc/uci-defaults/ 2>/dev/null || true
+	$(INSTALL_DIR) $(1)/etc/config
+	$(CP) -a ./root/etc/config/$(THEME_NAME) $(1)/etc/config/ 2>/dev/null || true
+endef
+
+define Package/luci-theme-$(THEME_NAME)/postrm
+#!/bin/sh
+[ -n "$${IPKG_INSTROOT}" ] || {
+	uci -q delete luci.themes.$(THEME_TITLE)
+	uci commit luci
+}
+exit 0
+endef
+
+$(eval $(call BuildPackage,luci-theme-$(THEME_NAME)))
