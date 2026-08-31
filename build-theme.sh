@@ -1,6 +1,6 @@
 #!/bin/bash
-# Direct IPK/APK builder - no SDK compile needed
-# PeDitXOSui is a LuCI theme (static files only), no compilation required.
+# Direct IPK/APK builder - no SDK, no ar, no compilation needed.
+# PeDitXOSui is a LuCI theme (static files only).
 
 set -e
 
@@ -14,38 +14,45 @@ WORK_DIR="$(pwd)"
 echo "=== Building ${PKG_NAME} ${PKG_VERSION}-${PKG_RELEASE} ==="
 
 # Clean previous builds
-rm -rf build-ipk build-apk
+rm -rf build-ipk build-apk artifacts-ipk artifacts-apk
+
+###############################################################################
+# Helper: create package directory structure
+###############################################################################
+build_file_tree() {
+    local DEST="$1"
+    mkdir -p "${DEST}/etc/config"
+    mkdir -p "${DEST}/etc/uci-defaults"
+    mkdir -p "${DEST}/www/luci-static/${THEME_NAME}"
+    mkdir -p "${DEST}/www/luci-static/resources"
+    mkdir -p "${DEST}/usr/lib/lua/luci/view/themes/${THEME_NAME}"
+    mkdir -p "${DEST}/usr/lib/lua/luci/view/${THEME_NAME}"
+    mkdir -p "${DEST}/usr/lib/lua/luci/controller"
+
+    [ -d "htdocs/luci-static/${THEME_NAME}" ] && cp -a htdocs/luci-static/${THEME_NAME}/* "${DEST}/www/luci-static/${THEME_NAME}/"
+    [ -d "htdocs/luci-static/resources" ] && cp -a htdocs/luci-static/resources/* "${DEST}/www/luci-static/resources/"
+    [ -d "luasrc/view/themes/${THEME_NAME}" ] && cp -a luasrc/view/themes/${THEME_NAME}/* "${DEST}/usr/lib/lua/luci/view/themes/${THEME_NAME}/"
+    [ -d "luasrc/view/${THEME_NAME}" ] && cp -a luasrc/view/${THEME_NAME}/* "${DEST}/usr/lib/lua/luci/view/${THEME_NAME}/"
+    [ -d "luasrc/controller" ] && cp -a luasrc/controller/*.lua "${DEST}/usr/lib/lua/luci/controller/"
+    [ -f "root/etc/uci-defaults/30-luci-theme-${THEME_NAME}" ] && cp -a "root/etc/uci-defaults/30-luci-theme-${THEME_NAME}" "${DEST}/etc/uci-defaults/"
+    [ -f "root/etc/config/${THEME_NAME}" ] && cp -a "root/etc/config/${THEME_NAME}" "${DEST}/etc/config/"
+
+    # Remove any empty directories
+    find "${DEST}" -type d -empty -delete 2>/dev/null || true
+}
 
 ###############################################################################
 # 1. Build IPK (OpenWrt 23.05+)
 ###############################################################################
 echo "--- Building IPK ---"
-IPK_DIR="${WORK_DIR}/build-ipk"
-IPK_PKG="${IPK_DIR}/${PKG_NAME}"
+IPK_PKG="${WORK_DIR}/build-ipk/${PKG_NAME}"
+build_file_tree "${IPK_PKG}"
 
-# Package structure
-mkdir -p "${IPK_PKG}/etc/config"
-mkdir -p "${IPK_PKG}/etc/uci-defaults"
-mkdir -p "${IPK_PKG}/www/luci-static/${THEME_NAME}"
-mkdir -p "${IPK_PKG}/www/luci-static/resources"
-mkdir -p "${IPK_PKG}/usr/lib/lua/luci/view/themes/${THEME_NAME}"
-mkdir -p "${IPK_PKG}/usr/lib/lua/luci/view/${THEME_NAME}"
-mkdir -p "${IPK_PKG}/usr/lib/lua/luci/controller"
-
-# Copy theme files
-[ -d "htdocs/luci-static/${THEME_NAME}" ] && cp -a htdocs/luci-static/${THEME_NAME}/* "${IPK_PKG}/www/luci-static/${THEME_NAME}/"
-[ -d "htdocs/luci-static/resources" ] && cp -a htdocs/luci-static/resources/* "${IPK_PKG}/www/luci-static/resources/"
-[ -d "luasrc/view/themes/${THEME_NAME}" ] && cp -a luasrc/view/themes/${THEME_NAME}/* "${IPK_PKG}/usr/lib/lua/luci/view/themes/${THEME_NAME}/"
-[ -d "luasrc/view/${THEME_NAME}" ] && cp -a luasrc/view/${THEME_NAME}/* "${IPK_PKG}/usr/lib/lua/luci/view/${THEME_NAME}/"
-[ -d "luasrc/controller" ] && cp -a luasrc/controller/*.lua "${IPK_PKG}/usr/lib/lua/luci/controller/"
-[ -f "root/etc/uci-defaults/30-luci-theme-${THEME_NAME}" ] && cp -a "root/etc/uci-defaults/30-luci-theme-${THEME_NAME}" "${IPK_PKG}/etc/uci-defaults/"
-[ -f "root/etc/config/${THEME_NAME}" ] && cp -a "root/etc/config/${THEME_NAME}" "${IPK_PKG}/etc/config/"
-
-# Count installed files
 FILE_COUNT=$(find "${IPK_PKG}" -type f | wc -l | tr -d ' ')
-echo "  Files to install: ${FILE_COUNT}"
+INSTALLED_SIZE=$(du -s "${IPK_PKG}" | awk '{print $1}')
+echo "  Files: ${FILE_COUNT}, Size: ${INSTALLED_SIZE}KB"
 
-# Create control file (IPK uses Ar control format)
+# CONTROL directory
 mkdir -p "${IPK_PKG}/CONTROL"
 cat > "${IPK_PKG}/CONTROL/control" << EOF
 Package: ${PKG_NAME}
@@ -56,7 +63,7 @@ License: Apache-2.0
 LicenseFiles: LICENSE
 Section: luci
 Architecture: all
-Installed-Size: $(du -s "${IPK_PKG}" | awk '{print $1}')
+Installed-Size: ${INSTALLED_SIZE}
 Maintainer: PeDitX <t.me/peditx>
 URL: https://github.com/PeDitXOS/luci-theme-PeDitXOSui
 Description: LuCI Theme For OpenWrt - PeDitXOSui
@@ -64,7 +71,7 @@ Description: LuCI Theme For OpenWrt - PeDitXOSui
  WiFi & LAN device detection, static DHCP lease, and responsive layout.
 EOF
 
-# Create postinst script
+# postinst: register theme in LuCI
 cat > "${IPK_PKG}/CONTROL/postinst" << 'POSTINST'
 #!/bin/sh
 [ -n "${IPKG_INSTROOT}" ] || {
@@ -78,7 +85,7 @@ exit 0
 POSTINST
 chmod 0755 "${IPK_PKG}/CONTROL/postinst"
 
-# Create postrm script
+# postrm: unregister theme
 cat > "${IPK_PKG}/CONTROL/postrm" << 'POSTRM'
 #!/bin/sh
 [ -n "${IPKG_INSTROOT}" ] || {
@@ -89,100 +96,56 @@ exit 0
 POSTRM
 chmod 0755 "${IPK_PKG}/CONTROL/postrm"
 
-# Create conffiles
+# conffiles
 cat > "${IPK_PKG}/CONTROL/conffiles" << EOF
 /etc/config/${THEME_NAME}
 /etc/uci-defaults/30-luci-theme-${THEME_NAME}
 EOF
 
-# Build IPK tar.gz
-mkdir -p "${IPK_DIR}/tmp"
-(cd "${IPK_PKG}" && tar czf "${IPK_DIR}/tmp/data.tar.gz" --exclude='./CONTROL' --exclude='.' .)
-(cd "${IPK_PKG}/CONTROL" && tar czf "${IPK_DIR}/tmp/control.tar.gz" .)
+# Build IPK as gzipped tarballs (opkg format = data.tar.gz + control.tar.gz + debian-binary)
+mkdir -p "${WORK_DIR}/build-ipk/tmp"
 
-# Create package version file
-echo "2.0" > "${IPK_DIR}/tmp/debian-binary"
+# data.tar.gz (everything except CONTROL)
+tar -C "${IPK_PKG}" --exclude='./CONTROL' -czf "${WORK_DIR}/build-ipk/tmp/data.tar.gz" .
 
-# Create IPK (ar archive)
-IPK_FILE="${IPK_DIR}/${PKG_NAME}_${PKG_VERSION}-${PKG_RELEASE}_all.ipk"
-(cd "${IPK_DIR}/tmp" && ar rc "${IPK_FILE}" debian-binary control.tar.gz data.tar.gz)
+# control.tar.gz
+tar -C "${IPK_PKG}/CONTROL" -czf "${WORK_DIR}/build-ipk/tmp/control.tar.gz" .
 
-# Copy IPK to artifacts
-mkdir -p artifacts-ipk
-cp "${IPK_FILE}" artifacts-ipk/
+# debian-binary
+echo "2.0" > "${WORK_DIR}/build-ipk/tmp/debian-binary"
+
+# IPK is just a .tar archive containing these three files
+IPK_FILE="${WORK_DIR}/artifacts-ipk/${PKG_NAME}_${PKG_VERSION}-${PKG_RELEASE}_all.ipk"
+mkdir -p "${WORK_DIR}/artifacts-ipk"
+tar -C "${WORK_DIR}/build-ipk/tmp" -cf "${IPK_FILE}" debian-binary control.tar.gz data.tar.gz
 
 echo "  IPK: ${IPK_FILE}"
-echo "  Size: $(du -h "${IPK_FILE}" | cut -f1)"
+echo "  Size: $(du -h "${IPK_FILE}" | awk '{print $1}')"
 
 ###############################################################################
 # 2. Build APK (OpenWrt 25.12+)
 ###############################################################################
 echo "--- Building APK ---"
-APK_DIR="${WORK_DIR}/build-apk"
-APK_PKG="${APK_DIR}/${PKG_NAME}"
+APK_PKG="${WORK_DIR}/build-apk/${PKG_NAME}"
+build_file_tree "${APK_PKG}"
 
-# APK uses same structure
-mkdir -p "${APK_PKG}/etc/config"
-mkdir -p "${APK_PKG}/etc/uci-defaults"
-mkdir -p "${APK_PKG}/www/luci-static/${THEME_NAME}"
-mkdir -p "${APK_PKG}/www/luci-static/resources"
-mkdir -p "${APK_PKG}/usr/lib/lua/luci/view/themes/${THEME_NAME}"
-mkdir -p "${APK_PKG}/usr/lib/lua/luci/view/${THEME_NAME}"
-mkdir -p "${APK_PKG}/usr/lib/lua/luci/controller"
-
-# Copy theme files
-[ -d "htdocs/luci-static/${THEME_NAME}" ] && cp -a htdocs/luci-static/${THEME_NAME}/* "${APK_PKG}/www/luci-static/${THEME_NAME}/"
-[ -d "htdocs/luci-static/resources" ] && cp -a htdocs/luci-static/resources/* "${APK_PKG}/www/luci-static/resources/"
-[ -d "luasrc/view/themes/${THEME_NAME}" ] && cp -a luasrc/view/themes/${THEME_NAME}/* "${APK_PKG}/usr/lib/lua/luci/view/themes/${THEME_NAME}/"
-[ -d "luasrc/view/${THEME_NAME}" ] && cp -a luasrc/view/${THEME_NAME}/* "${APK_PKG}/usr/lib/lua/luci/view/${THEME_NAME}/"
-[ -d "luasrc/controller" ] && cp -a luasrc/controller/*.lua "${APK_PKG}/usr/lib/lua/luci/controller/"
-[ -f "root/etc/uci-defaults/30-luci-theme-${THEME_NAME}" ] && cp -a "root/etc/uci-defaults/30-luci-theme-${THEME_NAME}" "${APK_PKG}/etc/uci-defaults/"
-[ -f "root/etc/config/${THEME_NAME}" ] && cp -a "root/etc/config/${THEME_NAME}" "${APK_PKG}/etc/config/"
-
-# Create APK manifest
-mkdir -p "${APK_DIR}/tmp"
-cat > "${APK_DIR}/tmp/APKBUILD" << EOF
-pkgname=${PKG_NAME}
-pkgver=${PKG_VERSION}
-pkgrel=${PKG_RELEASE}
-pkgdesc="LuCI Theme For OpenWrt - PeDitXOSui"
-url="https://github.com/PeDitXOS/luci-theme-PeDitXOSui"
-arch="all"
-license="Apache-2.0"
-depends="luci-base"
-source=""
-builddir="${APK_PKG}"
-
-package() {
-    cp -a "\${builddir}/"* "\${pkgdir}/"
-}
-EOF
-
-# Build APK (tar.zst format for OpenWrt 25.12)
-APK_FILE="${APK_DIR}/${PKG_NAME}_${PKG_VERSION}-${PKG_RELEASE}_all.apk"
+APK_FILE="${WORK_DIR}/artifacts-apk/${PKG_NAME}_${PKG_VERSION}-${PKG_RELEASE}_all.apk"
+mkdir -p "${WORK_DIR}/artifacts-apk"
 
 if command -v zstd &>/dev/null; then
-    # Create APK as tar.zst (OpenWrt APK format)
-    (cd "${APK_PKG}" && tar cf - . | zstd -o "${APK_FILE}")
-    mkdir -p artifacts-apk
-    cp "${APK_FILE}" artifacts-apk/
-    echo "  APK: ${APK_FILE}"
-    echo "  Size: $(du -h "${APK_FILE}" | cut -f1)"
+    tar -C "${APK_PKG}" -cf - . | zstd -o "${APK_FILE}"
+    echo "  APK (zstd): ${APK_FILE}"
 else
-    # Fallback: create as .tar.gz
-    APK_FILE="${APK_DIR}/${PKG_NAME}_${PKG_VERSION}-${PKG_RELEASE}_all.apk.tar.gz"
-    (cd "${APK_PKG}" && tar czf "${APK_FILE}" .)
-    mkdir -p artifacts-apk
-    cp "${APK_FILE}" artifacts-apk/
-    echo "  APK (tar.gz fallback): ${APK_FILE}"
-    echo "  Size: $(du -h "${APK_FILE}" | cut -f1)"
+    APK_FILE="${APK_FILE}.tar.gz"
+    tar -C "${APK_PKG}" -czf "${APK_FILE}" .
+    echo "  APK (tar.gz): ${APK_FILE}"
 fi
+echo "  Size: $(du -h "${APK_FILE}" | awk '{print $1}')"
 
 echo ""
 echo "=== Build Complete ==="
-echo "  IPK: artifacts-ipk/"
-echo "  APK: artifacts-apk/"
+echo ""
+ls -lh "${WORK_DIR}/artifacts-ipk/" "${WORK_DIR}/artifacts-apk/"
 echo ""
 echo "Install on OpenWrt:"
-echo "  IPK: opkg install luci-theme-${THEME_NAME}_${PKG_VERSION}-${PKG_RELEASE}_all.ipk"
-echo "  APK: apk add ${APK_FILE}"
+echo "  opkg install ${PKG_NAME}_${PKG_VERSION}-${PKG_RELEASE}_all.ipk"
