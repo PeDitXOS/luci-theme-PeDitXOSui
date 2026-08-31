@@ -20,7 +20,21 @@
     local netinfo = util.ubus("network.interface") or {}
 
     -- Get memory info
-    local meminfo = sys.sysinfo()
+    local meminfo = {}
+    if sys.sysinfo then
+        meminfo = sys.sysinfo()
+    else
+        -- Fallback: read from /proc/meminfo
+        local f = io.open("/proc/meminfo", "r")
+        if f then
+            local content = f:read("*a")
+            f:close()
+            local total = tonumber(content:match("MemTotal:%s+(%d+)")) or 0
+            local free = tonumber(content:match("MemFree:%s+(%d+)")) or 0
+            local avail = tonumber(content:match("MemAvailable:%s+(%d+)")) or free
+            meminfo = { total = total * 1024, free = free * 1024, buffered = (total - avail) * 1024 }
+        end
+    end
 
     -- Get CPU info
     local cpuinfo = sys.exec("cat /proc/cpuinfo | grep 'model name' | head -1 | cut -d: -f2 | xargs") or "Unknown"
