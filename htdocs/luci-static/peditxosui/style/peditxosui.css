@@ -1353,3 +1353,20 @@ textarea.cbi-input-textarea:focus {
         padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
     }
 }
+
+/* ═══════════════════════════════════════════
+   Sidebar Footer
+   ═══════════════════════════════════════════ */
+.peeditxos-sidebar-footer {
+    margin-top: auto;
+    padding: 1rem;
+    text-align: center;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border-color);
+    opacity: 0.7;
+}
+.peeditxos-sidebar-footer strong {
+    color: var(--accent-primary);
+    font-weight: 600;
+}
