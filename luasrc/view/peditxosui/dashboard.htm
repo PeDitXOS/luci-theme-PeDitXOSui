@@ -1,530 +1,469 @@
 <%#
-    PeDitXOSui Dashboard Template
+    PeDitXOSui Dashboard — Modern App-Style Layout
     Copyright 2025 PeDitX <t.me/peditx>
 -%>
 <%
-    local sys = require "luci.sys"
-    local util = require "luci.util"
-    local uci = require "luci.model.uci".cursor()
-    local json = require "luci.jsonc"
+local sys  = require "luci.sys"
+local util = require "luci.util"
+local uci  = require "luci.model.uci".cursor()
+local json = require "luci.jsonc"
 
-    -- Get system info
-    local boardinfo = util.ubus("system", "board") or {}
-    local hostname = boardinfo.hostname or "OpenWrt"
-    local model = boardinfo.model or "Unknown"
-    local release = boardinfo.release or {}
-    local distname = release.distribution or "OpenWrt"
-    local distver = release.version or "Unknown"
+-- System info
+local boardinfo = util.ubus("system", "board") or {}
+local hostname   = boardinfo.hostname or "OpenWrt"
+local model      = boardinfo.model or "Unknown"
+local release    = boardinfo.release or {}
+local distname   = release.distribution or "OpenWrt"
+local distver    = release.version or "Unknown"
 
-    -- Get network info
-    local netinfo = util.ubus("network.interface") or {}
+-- CPU usage
+local cpu_raw = sys.exec("grep -c ^processor /proc/cpuinfo") or "1"
+local ncpu = tonumber(cpu_raw) or 1
+local loadavg = sys.exec("cat /proc/loadavg") or "0 0 0"
+local load1 = loadavg:match("^(%S+)") or "0"
 
-    -- Get memory info
-    local meminfo = {}
-    if sys.sysinfo then
-        meminfo = sys.sysinfo()
-    else
-        -- Fallback: read from /proc/meminfo
-        local f = io.open("/proc/meminfo", "r")
-        if f then
-            local content = f:read("*a")
-            f:close()
-            local total = tonumber(content:match("MemTotal:%s+(%d+)")) or 0
-            local free = tonumber(content:match("MemFree:%s+(%d+)")) or 0
-            local avail = tonumber(content:match("MemAvailable:%s+(%d+)")) or free
-            meminfo = { total = total * 1024, free = free * 1024, buffered = (total - avail) * 1024 }
-        end
+-- Memory
+local mem_total, mem_used, mem_pct = 0, 0, 0
+do
+    local f = io.open("/proc/meminfo", "r")
+    if f then
+        local d = f:read("*a"); f:close()
+        local t = tonumber(d:match("MemTotal:%s+(%d+)")) or 1
+        local a = tonumber(d:match("MemAvailable:%s+(%d+)")) or 0
+        mem_total = math.floor(t / 1024)
+        mem_used  = math.floor((t - a) / 1024)
+        mem_pct   = math.floor((t - a) * 100 / t)
     end
+end
 
-    -- Get CPU info
-    local cpuinfo = sys.exec("cat /proc/cpuinfo | grep 'model name' | head -1 | cut -d: -f2 | xargs") or "Unknown"
+-- Uptime
+local uptime_s = tonumber(sys.exec("cat /proc/uptime"):match("^(%S+)")) or 0
+local uptime_d = math.floor(uptime_s / 86400)
+local uptime_h = math.floor((uptime_s % 86400) / 3600)
+local uptime_m = math.floor((uptime_s % 3600) / 60)
+local uptime_str = ""
+if uptime_d > 0 then uptime_str = uptime_d .. "d " end
+uptime_str = uptime_str .. uptime_h .. "h " .. uptime_m .. "m"
 
-    -- Get uptime
-    local uptime = sys.uptime() or 0
-    local days = math.floor(uptime / 86400)
-    local hours = math.floor((uptime % 86400) / 3600)
-    local mins = math.floor((uptime % 3600) / 60)
-    local uptime_str = string.format("%dd %dh %dm", days, hours, mins)
+-- WAN IP
+local wan_ip = sys.exec("ubus call network.interface.wan status 2>/dev/null | grep -o '\"address\":\"[^\"]*\"' | head -1 | cut -d'\"' -f4") or ""
+wan_ip = wan_ip:gsub("%s+", "")
+if wan_ip == "" then wan_ip = "—" end
 
-    -- Get DHCP leases
-    local dhcp_leases = util.ubus("dhcp", "leases") or {}
+-- Connected devices count
+local dev_count = 0
+sys.exec("cat /proc/net/arp | grep '0x2' | wc -l"):gsub("(%d+)", function(n) dev_count = tonumber(n) end)
 
-    -- Get WiFi connected clients
-    local wifi_clients = {}
-    local wifi_sta = util.ubus("hostapd", "get_clients", {}) or {}
-    if wifi_sta then
-        for _, client in pairs(wifi_sta) do
-            if client.mac then
-                wifi_clients[string.upper(client.mac)] = {
-                    signal = client.signal or 0,
-                    rx_rate = client.rx_rate or 0,
-                    tx_rate = client.tx_rate or 0,
-                    connected = client.connected or 0
-                }
-            end
-        end
-    end
+-- WiFi info
+local wifi_ssid = uci:get("wireless", uci:get_first("wireless", "wifi-iface") or "", "ssid") or "—"
+local wifi_up = sys.exec("uci get network.wan.proto 2>/dev/null") or ""
+wifi_up = wifi_up:gsub("%s+", "")
 
-    -- Also try wireless station list
-    local iw_info = sys.exec("iw dev 2>/dev/null | grep -A1 'Station' | grep 'Station' | awk '{print $2}'") or ""
-    for mac in iw_info:gmatch("([%xA-Fa-f:]+)") do
-        local mac_upper = string.upper(mac)
-        if not wifi_clients[mac_upper] then
-            wifi_clients[mac_upper] = { signal = math.random(-80, -30), rx_rate = 0, tx_rate = 0, connected = 0 }
-        end
-    end
-
-    -- Separate WiFi and LAN devices
-    local wifi_devices = {}
-    local lan_devices = {}
-
-    -- Get network device list for LAN detection
-    local lan_mac_list = {}
-    local arp_output = sys.exec("cat /proc/net/arp 2>/dev/null") or ""
-    for line in arp_output:gmatch("[^\n]+") do
-        local ip, _, mac, iface = line:match("^(%S+)%s+(%S+)%s+(%S+)%s+(.*)")
-        if ip and mac and iface then
-            if iface:match("br%-lan") or iface:match("^lan") then
-                lan_mac_list[string.upper(mac)] = { ip = ip, iface = iface }
-            end
-        end
-    end
-
-    -- Get traffic stats from /proc/net/dev
-    local traffic_stats = {}
-    local net_dev = sys.exec("cat /proc/net/dev 2>/dev/null") or ""
-    for line in net_dev:gmatch("[^\n]+") do
-        local iface, rx, tx = line:match("^%s*(%S+):%s+(%d+)%s+%S+%s+%S+%s+%S+%s+%S+%s+%S+%s+%S+%s+(%d+)")
-        if iface and rx and tx then
-            traffic_stats[iface] = { rx = tonumber(rx), tx = tonumber(tx) }
-        end
-    end
-
-    -- Categorize devices
-    for _, lease in ipairs(dhcp_leases) do
-        local mac = lease.macaddr or ""
-        local mac_upper = string.upper(mac)
-        local device = {
-            name = lease.hostname or "Unknown",
-            ip = lease.ipaddr or "N/A",
-            mac = mac,
-            mac_upper = mac_upper,
-            is_wifi = wifi_clients[mac_upper] ~= nil,
-            signal = wifi_clients[mac_upper] and wifi_clients[mac_upper].signal or 0,
-            is_static = false,
-            leasetime = lease.leasetime or 0
-        }
-
-        -- Check if static lease exists
-        uci:foreach("dhcp", "host", function(section)
-            if section.mac == mac then
-                device.is_static = true
-                return false
-            end
-        end)
-
-        if device.is_wifi then
-            table.insert(wifi_devices, device)
-        else
-            table.insert(lan_devices, device)
-        end
-    end
-
-    -- Get network interfaces
-    local interfaces = {}
-    for iface, data in pairs(netinfo) do
-        if data.up then
-            table.insert(interfaces, {
-                name = iface,
-                ip = data["ipv4-address"] and data["ipv4-address"][1] and data["ipv4-address"][1].address or "N/A",
-                protocol = data.proto or "static"
-            })
-        end
-    end
-
-    -- Calculate CPU usage (simplified)
-    local cpu_usage = sys.exec("top -bn1 | grep 'Cpu(s)' | awk '{print $2}' | cut -d'%' -f1") or "0"
-
-    -- Get load average
-    local loadavg = sys.exec("cat /proc/loadavg | awk '{print $1, $2, $3}'") or "0 0 0"
-    local load1, load5, load15 = loadavg:match("(%S+)%s+(%S+)%s+(%S+)")
-
-    -- Format bytes to human readable
-    function format_bytes(bytes)
-        if bytes >= 1073741824 then
-            return string.format("%.1f GB", bytes / 1073741824)
-        elseif bytes >= 1048576 then
-            return string.format("%.1f MB", bytes / 1048576)
-        elseif bytes >= 1024 then
-            return string.format("%.1f KB", bytes / 1024)
-        end
-        return bytes .. " B"
-    end
-
-    -- Signal quality to percentage
-    function signal_percent(sig)
-        if sig >= -50 then return 100
-        elseif sig >= -60 then return 80
-        elseif sig >= -70 then return 60
-        elseif sig >= -80 then return 40
-        else return 20 end
-    end
+-- Theme config
+local theme_cfg = uci:get_all("peditxosui", "theme") or {}
+local blur_val = tonumber(theme_cfg.blur) or 10
 %>
-<%+header%>
 
-<div class="peeditxos-dashboard">
-    <!-- Quick Status -->
-    <div class="peeditxos-grid peeditxos-grid-2">
-        <div class="peeditxos-card">
-            <div class="peeditxos-card-header">
-                <h3 class="peeditxos-card-title">
-                    <i class="fa-solid fa-signal"></i>
-                    Quick Status
-                </h3>
-                <span class="peeditxos-card-badge">DEVICES ONLINE: <%=#dhcp_leases%></span>
-            </div>
-            <div class="peeditxos-quick-status">
-                <div class="peeditxos-status-circle">
-                    <svg viewBox="0 0 160 160">
-                        <circle class="bg" cx="80" cy="80" r="70"></circle>
-                        <circle class="progress" cx="80" cy="80" r="70"></circle>
+<style>
+/* ═══════════════════════════════════════════════
+   Dashboard — Modern App Layout
+   ═══════════════════════════════════════════════ */
+.dash { padding:0; display:flex; flex-direction:column; gap:1.25rem; }
+
+/* ── Welcome Banner ── */
+.dash-welcome {
+    background: linear-gradient(135deg, rgba(6,182,212,0.15), rgba(139,92,246,0.10));
+    border: 1px solid rgba(6,182,212,0.2);
+    border-radius: 1rem;
+    padding: 1.25rem 1.5rem;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 1rem;
+}
+.dash-welcome h2 { margin:0; font-size:1.25rem; font-weight:700; color:var(--text-primary); }
+.dash-welcome p  { margin:0.25rem 0 0; font-size:.8rem; color:var(--text-muted); }
+.dash-welcome-badge {
+    display:inline-flex; align-items:center; gap:.4rem;
+    padding:.35rem .75rem; border-radius:2rem;
+    background:rgba(16,185,129,0.15); color:var(--accent-success);
+    font-size:.75rem; font-weight:600;
+}
+.dash-welcome-badge::before {
+    content:''; width:7px; height:7px; border-radius:50%;
+    background:var(--accent-success);
+    animation: pulse 2s infinite;
+}
+
+/* ── Stat Cards Row ── */
+.dash-stats {
+    display:grid; grid-template-columns:repeat(4,1fr); gap:1rem;
+}
+@media(max-width:900px){ .dash-stats{ grid-template-columns:repeat(2,1fr); } }
+@media(max-width:480px){ .dash-stats{ grid-template-columns:1fr; } }
+
+.dash-stat {
+    background:var(--bg-glass); border:1px solid var(--border-color);
+    border-radius:.875rem; padding:1.1rem 1.25rem;
+    display:flex; flex-direction:column; gap:.5rem;
+    transition: all .2s ease;
+}
+.dash-stat:hover { border-color:var(--border-glow); transform:translateY(-2px); }
+
+.dash-stat-top { display:flex; align-items:center; justify-content:space-between; }
+.dash-stat-icon {
+    width:38px; height:38px; border-radius:.6rem;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1rem;
+}
+.dash-stat-icon.cyan   { background:rgba(6,182,212,.15);  color:var(--accent-primary); }
+.dash-stat-icon.green  { background:rgba(16,185,129,.15);  color:var(--accent-success); }
+.dash-stat-icon.purple { background:rgba(139,92,246,.15);  color:var(--accent-secondary); }
+.dash-stat-icon.orange { background:rgba(245,158,11,.15);  color:var(--accent-warning); }
+
+.dash-stat-label { font-size:.75rem; color:var(--text-muted); font-weight:500; text-transform:uppercase; letter-spacing:.03em; }
+.dash-stat-value { font-size:1.5rem; font-weight:700; color:var(--text-primary); line-height:1.2; }
+.dash-stat-sub   { font-size:.7rem; color:var(--text-secondary); }
+
+/* ── Ring Gauge ── */
+.dash-gauge-wrap { position:relative; width:80px; height:80px; flex-shrink:0; }
+.dash-gauge-wrap svg { transform:rotate(-90deg); }
+.dash-gauge-bg   { fill:none; stroke:rgba(255,255,255,.06); stroke-width:6; }
+.dash-gauge-fill { fill:none; stroke-width:6; stroke-linecap:round; transition:stroke-dashoffset .8s ease; }
+.dash-gauge-text {
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-size:.85rem; font-weight:700; color:var(--text-primary);
+}
+
+/* ── Cards ── */
+.dash-card {
+    background:var(--bg-glass); border:1px solid var(--border-color);
+    border-radius:.875rem; overflow:hidden;
+    transition:border-color .2s;
+}
+.dash-card:hover { border-color:var(--border-glow); }
+.dash-card-head {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:1rem 1.25rem; border-bottom:1px solid var(--border-color);
+}
+.dash-card-title { font-size:.9rem; font-weight:600; color:var(--text-primary); display:flex; align-items:center; gap:.5rem; }
+.dash-card-badge {
+    font-size:.65rem; padding:.2rem .6rem; border-radius:1rem;
+    background:rgba(6,182,212,.12); color:var(--accent-primary); font-weight:600;
+}
+.dash-card-body { padding:1rem 1.25rem; }
+
+/* ── Modules Grid ── */
+.dash-modules { display:grid; grid-template-columns:repeat(3,1fr); gap:.75rem; }
+@media(max-width:480px){ .dash-modules{ grid-template-columns:repeat(2,1fr); } }
+
+.dash-mod {
+    display:flex; flex-direction:column; align-items:center; gap:.5rem;
+    padding:1rem .5rem; border-radius:.75rem;
+    background:var(--bg-glass); border:1px solid var(--border-color);
+    cursor:pointer; text-decoration:none; color:var(--text-secondary);
+    transition:all .2s ease;
+}
+.dash-mod:hover {
+    border-color:var(--border-glow); color:var(--text-primary);
+    transform:translateY(-3px); box-shadow:0 8px 25px rgba(6,182,212,.12);
+}
+.dash-mod-icon {
+    width:44px; height:44px; border-radius:.65rem;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.15rem; transition:transform .2s;
+}
+.dash-mod:hover .dash-mod-icon { transform:scale(1.1); }
+.dash-mod-label { font-size:.7rem; font-weight:600; text-align:center; }
+
+/* ── Traffic Chart ── */
+.dash-chart-wrap { position:relative; height:180px; }
+.dash-chart-wrap canvas { width:100%!important; height:100%!important; }
+
+/* ── Device Table ── */
+.dash-table { width:100%; border-collapse:collapse; }
+.dash-table th {
+    text-align:left; padding:.6rem .75rem;
+    font-size:.7rem; font-weight:600; color:var(--text-muted);
+    text-transform:uppercase; letter-spacing:.04em;
+    border-bottom:1px solid var(--border-color);
+}
+.dash-table td {
+    padding:.6rem .75rem; font-size:.8rem; color:var(--text-secondary);
+    border-bottom:1px solid rgba(255,255,255,.03);
+}
+.dash-table tr:hover td { background:rgba(255,255,255,.02); }
+.dash-table .dev-name { color:var(--text-primary); font-weight:500; }
+.dash-table .dev-ip   { font-family:'JetBrains Mono',monospace; font-size:.75rem; color:var(--text-muted); }
+
+/* Signal bars */
+.signal-bars { display:flex; gap:2px; align-items:flex-end; height:14px; }
+.signal-bar  { width:3px; border-radius:1px; background:var(--text-muted); }
+.signal-bar.on { background:var(--accent-success); }
+
+/* ── Log ── */
+.dash-log { font-family:'JetBrains Mono',monospace; font-size:.72rem; line-height:1.7; max-height:200px; overflow-y:auto; }
+.dash-log-line { display:flex; gap:.75rem; padding:.15rem 0; }
+.dash-log-time { color:var(--text-muted); white-space:nowrap; flex-shrink:0; }
+.dash-log-msg  { color:var(--text-secondary); }
+.dash-log-msg.warn { color:var(--accent-warning); }
+.dash-log-msg.err  { color:var(--accent-danger); }
+.dash-log-msg.ok   { color:var(--accent-success); }
+
+/* ── Activity Timeline ── */
+.dash-activity { display:flex; flex-direction:column; gap:0; }
+.dash-act-item {
+    display:flex; gap:.75rem; padding:.6rem 0;
+    border-bottom:1px solid rgba(255,255,255,.03);
+}
+.dash-act-item:last-child { border:none; }
+.dash-act-dot {
+    width:8px; height:8px; border-radius:50%; margin-top:.35rem; flex-shrink:0;
+}
+.dash-act-dot.green  { background:var(--accent-success); }
+.dash-act-dot.cyan   { background:var(--accent-primary); }
+.dash-act-dot.orange { background:var(--accent-warning); }
+.dash-act-dot.red    { background:var(--accent-danger); }
+.dash-act-text { font-size:.78rem; color:var(--text-secondary); flex:1; }
+.dash-act-time { font-size:.68rem; color:var(--text-muted); white-space:nowrap; }
+
+/* ── Two-col layout ── */
+.dash-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+@media(max-width:768px){ .dash-grid-2{ grid-template-columns:1fr; } }
+
+/* ── Footer ── */
+.dash-footer {
+    text-align:center; padding:.75rem 0;
+    font-size:.7rem; color:var(--text-muted);
+}
+.dash-footer strong { color:var(--accent-primary); }
+</style>
+
+<div class="dash">
+
+    <!-- ═══ Welcome Banner ═══ -->
+    <div class="dash-welcome">
+        <div>
+            <h2><i class="fa-solid fa-terminal" style="color:var(--accent-primary);margin-right:.4rem"></i><%=hostname%></h2>
+            <p><%=distname%> <%=distver%> &middot; <%=model%> &middot; Up <%=uptime_str%></p>
+        </div>
+        <div class="dash-welcome-badge"><%=translate("Online")%></div>
+    </div>
+
+    <!-- ═══ Stat Cards ═══ -->
+    <div class="dash-stats">
+        <!-- Connection -->
+        <div class="dash-stat">
+            <div class="dash-stat-top">
+                <div>
+                    <div class="dash-stat-label"><%=translate("Connection")%></div>
+                    <div class="dash-stat-value" id="connPct">95%</div>
+                </div>
+                <div class="dash-gauge-wrap">
+                    <svg width="80" height="80" viewBox="0 0 80 80">
+                        <circle class="dash-gauge-bg" cx="40" cy="40" r="34"/>
+                        <circle class="dash-gauge-fill" cx="40" cy="40" r="34"
+                            stroke="var(--accent-success)"
+                            stroke-dasharray="213.6"
+                            stroke-dashoffset="10.7"
+                            id="connGauge"/>
                     </svg>
-                    <div class="peeditxos-status-value">
-                        <div class="peeditxos-status-percent"><%=cpu_usage or "0"%>%</div>
-                        <div class="peeditxos-status-label">Online</div>
+                    <div class="dash-gauge-text"><i class="fa-solid fa-wifi" style="font-size:.75rem;color:var(--accent-success)"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Download -->
+        <div class="dash-stat">
+            <div class="dash-stat-top">
+                <div>
+                    <div class="dash-stat-label"><%=translate("Download")%></div>
+                    <div class="dash-stat-value" id="dlSpeed">—</div>
+                </div>
+                <div class="dash-stat-icon cyan"><i class="fa-solid fa-arrow-down"></i></div>
+            </div>
+            <div class="dash-stat-sub">Mbps &middot; avg</div>
+        </div>
+
+        <!-- Upload -->
+        <div class="dash-stat">
+            <div class="dash-stat-top">
+                <div>
+                    <div class="dash-stat-label"><%=translate("Upload")%></div>
+                    <div class="dash-stat-value" id="ulSpeed">—</div>
+                </div>
+                <div class="dash-stat-icon purple"><i class="fa-solid fa-arrow-up"></i></div>
+            </div>
+            <div class="dash-stat-sub">Mbps &middot; avg</div>
+        </div>
+
+        <!-- Devices -->
+        <div class="dash-stat">
+            <div class="dash-stat-top">
+                <div>
+                    <div class="dash-stat-label"><%=translate("Devices")%></div>
+                    <div class="dash-stat-value" id="devCount"><%=dev_count%></div>
+                </div>
+                <div class="dash-stat-icon green"><i class="fa-solid fa-laptop"></i></div>
+            </div>
+            <div class="dash-stat-sub"><%=translate("Connected")%></div>
+        </div>
+    </div>
+
+    <!-- ═══ Main Modules ═══ -->
+    <div class="dash-card">
+        <div class="dash-card-head">
+            <div class="dash-card-title"><i class="fa-solid fa-th-large"></i> <%=translate("Quick Access")%></div>
+        </div>
+        <div class="dash-card-body">
+            <div class="dash-modules">
+                <a href="<%=url('admin/network/wireless')%>" class="dash-mod">
+                    <div class="dash-mod-icon" style="background:rgba(6,182,212,.12);color:var(--accent-primary)"><i class="fa-solid fa-wifi"></i></div>
+                    <span class="dash-mod-label"><%=translate("WiFi")%></span>
+                </a>
+                <a href="<%=url('admin/network/dhcp_leases')%>" class="dash-mod">
+                    <div class="dash-mod-icon" style="background:rgba(139,92,246,.12);color:var(--accent-secondary)"><i class="fa-solid fa-laptop"></i></div>
+                    <span class="dash-mod-label"><%=translate("Devices")%></span>
+                </a>
+                <a href="<%=url('admin/network')%>" class="dash-mod">
+                    <div class="dash-mod-icon" style="background:rgba(16,185,129,.12);color:var(--accent-success)"><i class="fa-solid fa-network-wired"></i></div>
+                    <span class="dash-mod-label"><%=translate("Network")%></span>
+                </a>
+                <a href="<%=url('admin/network/firewall')%>" class="dash-mod">
+                    <div class="dash-mod-icon" style="background:rgba(239,68,68,.12);color:var(--accent-danger)"><i class="fa-solid fa-shield-halved"></i></div>
+                    <span class="dash-mod-label"><%=translate("Firewall")%></span>
+                </a>
+                <a href="<%=url('admin/system/system')%>" class="dash-mod">
+                    <div class="dash-mod-icon" style="background:rgba(245,158,11,.12);color:var(--accent-warning)"><i class="fa-solid fa-gear"></i></div>
+                    <span class="dash-mod-label"><%=translate("System")%></span>
+                </a>
+                <a href="<%=url('admin/system/software')%>" class="dash-mod">
+                    <div class="dash-mod-icon" style="background:rgba(6,182,212,.12);color:var(--accent-primary)"><i class="fa-solid fa-box-open"></i></div>
+                    <span class="dash-mod-label"><%=translate("Software")%></span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ Traffic + Quick Info ═══ -->
+    <div class="dash-grid-2">
+        <!-- Traffic Monitor -->
+        <div class="dash-card">
+            <div class="dash-card-head">
+                <div class="dash-card-title"><i class="fa-solid fa-chart-line"></i> <%=translate("Traffic Monitor")%></div>
+                <div class="dash-card-badge"><%=translate("Live")%></div>
+            </div>
+            <div class="dash-card-body">
+                <div class="dash-chart-wrap">
+                    <canvas id="trafficChart"></canvas>
+                </div>
+                <div style="display:flex;gap:1.5rem;margin-top:.75rem">
+                    <div style="display:flex;align-items:center;gap:.4rem;font-size:.72rem;color:var(--text-muted)">
+                        <span style="width:8px;height:8px;border-radius:50%;background:var(--accent-primary)"></span>
+                        <%=translate("Download")%>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:.4rem;font-size:.72rem;color:var(--text-muted)">
+                        <span style="width:8px;height:8px;border-radius:50%;background:var(--accent-secondary)"></span>
+                        <%=translate("Upload")%>
                     </div>
                 </div>
-                <div class="peeditxos-status-info">
-                    <div class="peeditxos-status-item">
-                        <div class="peeditxos-status-icon download">
-                            <i class="fa-solid fa-arrow-down"></i>
-                        </div>
-                        <div class="peeditxos-status-text">
-                            <span class="peeditxos-status-title">Download</span>
-                            <span class="peeditxos-status-speed"><%=load1 or "0"%> Mbps</span>
-                        </div>
-                    </div>
-                    <div class="peeditxos-status-item">
-                        <div class="peeditxos-status-icon upload">
-                            <i class="fa-solid fa-arrow-up"></i>
-                        </div>
-                        <div class="peeditxos-status-text">
-                            <span class="peeditxos-status-title">Upload</span>
-                            <span class="peeditxos-status-speed"><%=load5 or "0"%> Mbps</span>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
 
-        <div class="peeditxos-card">
-            <div class="peeditxos-card-header">
-                <h3 class="peeditxos-card-title">
-                    <i class="fa-solid fa-chart-line"></i>
-                    Traffic Monitor
-                </h3>
-                <span class="peeditxos-card-badge">CPU USAGE: <%=cpu_usage or "0"%>%</span>
+        <!-- System Info -->
+        <div class="dash-card">
+            <div class="dash-card-head">
+                <div class="dash-card-title"><i class="fa-solid fa-microchip"></i> <%=translate("System")%></div>
             </div>
-            <div class="peeditxos-chart">
-                <canvas id="trafficChart"></canvas>
+            <div class="dash-card-body" style="display:flex;flex-direction:column;gap:.75rem">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                    <span style="font-size:.78rem;color:var(--text-muted)"><%=translate("CPU Usage")%></span>
+                    <span style="font-size:.85rem;font-weight:600;color:var(--text-primary)" id="cpuVal"><%=load1%></span>
+                </div>
+                <div style="height:6px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden">
+                    <div style="height:100%;width:<%=math.min(tonumber(load1)*100/ncpu,100)%>%;background:linear-gradient(90deg,var(--accent-primary),var(--accent-secondary));border-radius:3px" id="cpuBar"></div>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:.5rem">
+                    <span style="font-size:.78rem;color:var(--text-muted)"><%=translate("Memory")%></span>
+                    <span style="font-size:.85rem;font-weight:600;color:var(--text-primary)"><%=mem_used%> / <%=mem_total%> MB</span>
+                </div>
+                <div style="height:6px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden">
+                    <div style="height:100%;width:<%=mem_pct%>%;background:linear-gradient(90deg,var(--accent-success),var(--accent-primary));border-radius:3px"></div>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:.5rem">
+                    <span style="font-size:.78rem;color:var(--text-muted)"><%=translate("Uptime")%></span>
+                    <span style="font-size:.85rem;font-weight:600;color:var(--text-primary)"><%=uptime_str%></span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                    <span style="font-size:.78rem;color:var(--text-muted)"><%=translate("WAN IP")%></span>
+                    <span style="font-size:.78rem;font-family:'JetBrains Mono',monospace;color:var(--accent-primary)"><%=wan_ip%></span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                    <span style="font-size:.78rem;color:var(--text-muted)"><%=translate("Hostname")%></span>
+                    <span style="font-size:.85rem;font-weight:600;color:var(--text-primary)"><%=hostname%></span>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- System Info & Connected Devices -->
-    <div class="peeditxos-grid peeditxos-grid-2">
-        <div class="peeditxos-card">
-            <div class="peeditxos-card-header">
-                <h3 class="peeditxos-card-title">
-                    <i class="fa-solid fa-desktop"></i>
-                    System Info
-                </h3>
+    <!-- ═══ Connected Devices ═══ -->
+    <div class="dash-card">
+        <div class="dash-card-head">
+            <div class="dash-card-title"><i class="fa-solid fa-desktop"></i> <%=translate("Connected Devices")%></div>
+            <div class="dash-card-badge" id="devBadge"><%=dev_count%> <%=translate("online")%></div>
+        </div>
+        <div class="dash-card-body" style="padding:0;overflow-x:auto">
+            <table class="dash-table" id="deviceTable">
+                <thead>
+                    <tr>
+                        <th><%=translate("Name")%></th>
+                        <th><%=translate("IP Address")%></th>
+                        <th><%=translate("MAC")%></th>
+                        <th><%=translate("Signal")%></th>
+                    </tr>
+                </thead>
+                <tbody id="deviceBody">
+                    <tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--text-muted)">
+                        <i class="fa-solid fa-spinner fa-spin"></i> <%=translate("Loading...")%>
+                    </td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ═══ Log + Activity ═══ -->
+    <div class="dash-grid-2">
+        <!-- System Log -->
+        <div class="dash-card">
+            <div class="dash-card-head">
+                <div class="dash-card-title"><i class="fa-solid fa-scroll"></i> <%=translate("System Log")%></div>
             </div>
-            <div class="peeditxos-system-info">
-                <div class="peeditxos-info-item">
-                    <span class="peeditxos-info-label">Hostname</span>
-                    <span class="peeditxos-info-value"><%=hostname%></span>
-                </div>
-                <div class="peeditxos-info-item">
-                    <span class="peeditxos-info-label">Model</span>
-                    <span class="peeditxos-info-value"><%=model%></span>
-                </div>
-                <div class="peeditxos-info-item">
-                    <span class="peeditxos-info-label">Firmware</span>
-                    <span class="peeditxos-info-value"><%=distname%> <%=distver%></span>
-                </div>
-                <div class="peeditxos-info-item">
-                    <span class="peeditxos-info-label">Uptime</span>
-                    <span class="peeditxos-info-value"><%=uptime_str%></span>
-                </div>
-                <div class="peeditxos-info-item">
-                    <span class="peeditxos-info-label">CPU</span>
-                    <span class="peeditxos-info-value"><%=cpuinfo%></span>
-                </div>
-                <div class="peeditxos-info-item">
-                    <span class="peeditxos-info-label">Load Average</span>
-                    <span class="peeditxos-info-value"><%=load1%> / <%=load5%> / <%=load15%></span>
+            <div class="dash-card-body">
+                <div class="dash-log" id="syslog">
+                    <div class="dash-log-line"><span class="dash-log-time">--:--</span><span class="dash-log-msg"><%=translate("Loading log...")%></span></div>
                 </div>
             </div>
         </div>
 
-        <div class="peeditxos-card">
-            <div class="peeditxos-card-header">
-                <h3 class="peeditxos-card-title">
-                    <i class="fa-solid fa-network-wired"></i>
-                    Connected Devices
-                </h3>
-                <span class="peeditxos-card-badge">WiFi: <%=#wifi_devices%> | LAN: <%=#lan_devices%></span>
+        <!-- Recent Activity -->
+        <div class="dash-card">
+            <div class="dash-card-head">
+                <div class="dash-card-title"><i class="fa-solid fa-clock-rotate-left"></i> <%=translate("Recent Activity")%></div>
             </div>
-            <div class="peeditxos-table-container">
-                <table class="peeditxos-table">
-                    <thead>
-                        <tr>
-                            <th>Device</th>
-                            <th>IP Address</th>
-                            <th>Connection</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% for i, device in ipairs(wifi_devices) do %>
-                        <tr>
-                            <td>
-                                <div class="peeditxos-device-info">
-                                    <div class="peeditxos-device-icon wifi">
-                                        <i class="fa-solid fa-wifi"></i>
-                                    </div>
-                                    <div>
-                                        <div class="peeditxos-device-name"><%=device.name or "Unknown"%></div>
-                                        <div class="peeditxos-device-type"><%=device.mac%></div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><%=device.ip or "N/A"%></td>
-                            <td>
-                                <div class="peeditxos-signal">
-                                    <span class="peeditxos-text-success"><%=signal_percent(device.signal)%>%</span>
-                                    <div class="peeditxos-signal-bars">
-                                        <% for b = 1, 4 do %>
-                                        <div class="peeditxos-signal-bar <% if signal_percent(device.signal) >= b * 25 then %>active<% end %>" style="height: <%=b * 4%>px;"></div>
-                                        <% end %>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <% if device.is_static then %>
-                                <span class="peeditxos-badge-static"><i class="fa-solid fa-lock"></i> Static</span>
-                                <% else %>
-                                <form method="post" action="<%=luci.dispatcher.build_url('admin', 'status', 'peditxosui')%>" style="display:inline">
-                                    <input type="hidden" name="token" value="<%=luci.dispatcher.context.authtoken%>">
-                                    <input type="hidden" name="action" value="set_static">
-                                    <input type="hidden" name="mac" value="<%=device.mac%>">
-                                    <input type="hidden" name="ip" value="<%=device.ip%>">
-                                    <input type="hidden" name="name" value="<%=device.name or ''%>">
-                                    <button type="submit" class="peeditxos-btn-static" title="Set Static Lease">
-                                        <i class="fa-solid fa-thumbtack"></i> Static
-                                    </button>
-                                </form>
-                                <% end %>
-                            </td>
-                        </tr>
-                        <% end %>
-                        <% for i, device in ipairs(lan_devices) do %>
-                        <tr>
-                            <td>
-                                <div class="peeditxos-device-info">
-                                    <div class="peeditxos-device-icon lan">
-                                        <i class="fa-solid fa-plug"></i>
-                                    </div>
-                                    <div>
-                                        <div class="peeditxos-device-name"><%=device.name or "Unknown"%></div>
-                                        <div class="peeditxos-device-type"><%=device.mac%></div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><%=device.ip or "N/A"%></td>
-                            <td>
-                                <div class="peeditxos-lan-status">
-                                    <span class="peeditxos-text-primary"><i class="fa-solid fa-arrow-up"></i> LAN</span>
-                                </div>
-                            </td>
-                            <td>
-                                <% if device.is_static then %>
-                                <span class="peeditxos-badge-static"><i class="fa-solid fa-lock"></i> Static</span>
-                                <% else %>
-                                <form method="post" action="<%=luci.dispatcher.build_url('admin', 'status', 'peditxosui')%>" style="display:inline">
-                                    <input type="hidden" name="token" value="<%=luci.dispatcher.context.authtoken%>">
-                                    <input type="hidden" name="action" value="set_static">
-                                    <input type="hidden" name="mac" value="<%=device.mac%>">
-                                    <input type="hidden" name="ip" value="<%=device.ip%>">
-                                    <input type="hidden" name="name" value="<%=device.name or ''%>">
-                                    <button type="submit" class="peeditxos-btn-static" title="Set Static Lease">
-                                        <i class="fa-solid fa-thumbtack"></i> Static
-                                    </button>
-                                </form>
-                                <% end %>
-                            </td>
-                        </tr>
-                        <% end %>
-                        <% if #wifi_devices == 0 and #lan_devices == 0 then %>
-                        <tr>
-                            <td colspan="4" class="peeditxos-text-center peeditxos-text-muted">No devices connected</td>
-                        </tr>
-                        <% end %>
-                    </tbody>
-                </table>
+            <div class="dash-card-body">
+                <div class="dash-activity" id="activityFeed">
+                    <div class="dash-act-item"><div class="dash-act-dot green"></div><span class="dash-act-text"><%=translate("System started")%></span><span class="dash-act-time"><%=uptime_str%></span></div>
+                    <div class="dash-act-item"><div class="dash-act-dot cyan"></div><span class="dash-act-text"><%=translate("DHCP server active")%></span><span class="dash-act-time">—</span></div>
+                    <div class="dash-act-item"><div class="dash-act-dot green"></div><span class="dash-act-text"><%=translate("Firewall rules loaded")%></span><span class="dash-act-time">—</span></div>
+                    <div class="dash-act-item"><div class="dash-act-dot orange"></div><span class="dash-act-text"><%=translate("DNS resolver active")%></span><span class="dash-act-time">—</span></div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Main Modules -->
-    <div class="peeditxos-card">
-        <div class="peeditxos-card-header">
-            <h3 class="peeditxos-card-title">
-                <i class="fa-solid fa-th-large"></i>
-                Main Modules
-            </h3>
-            <span class="peeditxos-card-badge">CPU USAGE: <%=cpu_usage or "0"%>%</span>
-        </div>
-        <div class="peeditxos-modules">
-            <a href="<%=luci.dispatcher.build_url('admin', 'network', 'wireless')%>" class="peeditxos-module">
-                <div class="peeditxos-module-icon wifi">
-                    <i class="fa-solid fa-wifi"></i>
-                </div>
-                <span class="peeditxos-module-label">WiFi Settings</span>
-            </a>
-            <a href="<%=luci.dispatcher.build_url('admin', 'network', 'dhcp_leases')%>" class="peeditxos-module">
-                <div class="peeditxos-module-icon devices">
-                    <i class="fa-solid fa-laptop"></i>
-                </div>
-                <span class="peeditxos-module-label">Connected Devices</span>
-            </a>
-            <a href="<%=luci.dispatcher.build_url('admin', 'status', 'overview')%>" class="peeditxos-module">
-                <div class="peeditxos-module-icon traffic">
-                    <i class="fa-solid fa-chart-simple"></i>
-                </div>
-                <span class="peeditxos-module-label">Traffic Monitor</span>
-            </a>
-            <a href="<%=luci.dispatcher.build_url('admin', 'network', 'firewall')%>" class="peeditxos-module">
-                <div class="peeditxos-module-icon firewall">
-                    <i class="fa-solid fa-shield-halved"></i>
-                </div>
-                <span class="peeditxos-module-label">Firewall</span>
-            </a>
-            <a href="<%=luci.dispatcher.build_url('admin', 'system', 'system')%>" class="peeditxos-module">
-                <div class="peeditxos-module-icon system">
-                    <i class="fa-solid fa-microchip"></i>
-                </div>
-                <span class="peeditxos-module-label">System Info</span>
-            </a>
-            <a href="<%=luci.dispatcher.build_url('admin', 'system', 'opkg')%>" class="peeditxos-module">
-                <div class="peeditxos-module-icon updates">
-                    <i class="fa-solid fa-cloud-arrow-down"></i>
-                </div>
-                <span class="peeditxos-module-label">Software Updates</span>
-            </a>
-        </div>
+    <!-- ═══ Footer ═══ -->
+    <div class="dash-footer">
+        <strong>PeDitXOS</strong> &middot; <%=translate("Designed for")%> <strong>OpenWrt</strong> &middot; <a href="https://t.me/peditx" target="_blank" style="color:var(--accent-primary);text-decoration:none">@peditx</a>
     </div>
 
-    <!-- System Log & Recent Activity -->
-    <div class="peeditxos-grid peeditxos-grid-2">
-        <div class="peeditxos-card">
-            <div class="peeditxos-card-header">
-                <h3 class="peeditxos-card-title">
-                    <i class="fa-solid fa-file-lines"></i>
-                    System Log
-                </h3>
-            </div>
-            <div class="peeditxos-log" id="systemLog">
-                <%
-                    local log = sys.exec("logread -n 20 2>/dev/null") or "No log entries"
-                    for line in log:gmatch("[^\n]+") do
-                %>
-                <div class="peeditxos-log-entry">
-                    <span class="peeditxos-log-time"><%=line:match("^(%S+ %S+ %S+)") or ""%></span>
-                    <span class="peeditxos-log-message"><%=line:match("^%S+ %S+ %S+ .*$") or line%></span>
-                </div>
-                <% end %>
-            </div>
-        </div>
-
-        <div class="peeditxos-card">
-            <div class="peeditxos-card-header">
-                <h3 class="peeditxos-card-title">
-                    <i class="fa-solid fa-clock-rotate-left"></i>
-                    Recent Activity
-                </h3>
-            </div>
-            <div class="peeditxos-activity">
-                <div class="peeditxos-activity-item">
-                    <div class="peeditxos-activity-dot"></div>
-                    <span class="peeditxos-activity-text">System started</span>
-                    <span class="peeditxos-activity-time"><%=uptime_str%> ago</span>
-                </div>
-                <% for i, iface in ipairs(interfaces) do %>
-                <div class="peeditxos-activity-item">
-                    <div class="peeditxos-activity-dot" style="background: var(--accent-primary);"></div>
-                    <span class="peeditxos-activity-text">Interface <%=iface.name%> is up</span>
-                    <span class="peeditxos-activity-time"><%=iface.ip%></span>
-                </div>
-                <% end %>
-                <% for i, lease in ipairs(dhcp_leases) do %>
-                <div class="peeditxos-activity-item">
-                    <div class="peeditxos-activity-dot" style="background: var(--accent-secondary);"></div>
-                    <span class="peeditxos-activity-text">Device Connected: <%=lease.hostname or "Unknown"%></span>
-                    <span class="peeditxos-activity-time"><%=lease.ipaddr or ""%></span>
-                </div>
-                <% end %>
-            </div>
-        </div>
-    </div>
-
-    <!-- Designed for PeDitXOS -->
-    <div class="peeditxos-footer-badge">
-        Designed for <strong>PeDitXOS</strong>
-    </div>
 </div>
-
-<script>
-// Traffic Chart (placeholder - can be replaced with Chart.js)
-document.addEventListener('DOMContentLoaded', function() {
-    const canvas = document.getElementById('trafficChart');
-    if (canvas) {
-        const ctx = canvas.getContext('2d');
-        const width = canvas.parentElement.offsetWidth;
-        const height = canvas.parentElement.offsetHeight;
-        canvas.width = width;
-        canvas.height = height;
-
-        const style = getComputedStyle(document.documentElement);
-        const accent = style.getPropertyValue('--accent-primary').trim() || '#06b6d4';
-
-        // Draw simple traffic chart
-        ctx.strokeStyle = accent;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-
-        const points = 50;
-        for (let i = 0; i < points; i++) {
-            const x = (i / points) * width;
-            const y = height/2 + Math.sin(i * 0.3) * (height/3) + Math.random() * 20;
-            if (i === 0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
-        }
-        ctx.stroke();
-
-        // Draw gradient fill
-        ctx.lineTo(width, height);
-        ctx.lineTo(0, height);
-        ctx.closePath();
-
-        const gradient = ctx.createLinearGradient(0, 0, 0, height);
-        gradient.addColorStop(0, accent + '4D');
-        gradient.addColorStop(1, 'transparent');
-        ctx.fillStyle = gradient;
-        ctx.fill();
-    }
-});
-</script>
-
-<%+footer%>
