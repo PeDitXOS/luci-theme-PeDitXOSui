@@ -1,5 +1,5 @@
 /* PeDitXOSui Theme - Modern Dashboard UI */
-/* Version: 1.4.1 */
+/* Version: 1.5.0 */
 
 
 :root {
@@ -966,4 +966,163 @@ body::before {
 .peeditxos-table-wrapper table {
     min-width: 600px;
     width: 100%;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LIQUID GLASS / IOS 26 STYLES
+   ═══════════════════════════════════════════════════════════════ */
+
+.peeditxos-sidebar {
+    background: var(--bg-sidebar);
+    backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    border-right: 1px solid rgba(255,255,255,0.08);
+    box-shadow: inset 1px 0 0 rgba(255,255,255,0.05),
+                0 0 40px rgba(6,182,212,0.03);
+}
+
+.peeditxos-header {
+    background: var(--bg-card);
+    backdrop-filter: blur(25px) saturate(180%);
+    -webkit-backdrop-filter: blur(25px) saturate(180%);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2),
+                inset 0 1px 0 rgba(255,255,255,0.03);
+}
+
+.peeditxos-navbar {
+    background: var(--bg-sidebar);
+    backdrop-filter: blur(25px) saturate(180%);
+    -webkit-backdrop-filter: blur(25px) saturate(180%);
+    border-top: 1px solid rgba(255,255,255,0.06);
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.15),
+                inset 0 1px 0 rgba(255,255,255,0.03);
+}
+
+.peeditxos-card,
+.dash-stat,
+.dash-card,
+.peeditxos-module {
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    border: 1px solid rgba(255,255,255,0.05);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12),
+                inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+.peeditxos-card:hover,
+.dash-stat:hover,
+.dash-card:hover {
+    border-color: var(--border-glow);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.18),
+                inset 0 1px 0 rgba(255,255,255,0.06),
+                0 0 20px var(--border-glow);
+}
+
+.peeditxos-nav-link {
+    background: rgba(255,255,255,0.02);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.03);
+}
+
+.peeditxos-nav-link:hover {
+    background: rgba(6,182,212,0.08);
+    border-color: rgba(6,182,212,0.15);
+}
+
+.peeditxos-nav-link.active {
+    background: linear-gradient(135deg, rgba(6,182,212,0.2), rgba(139,92,246,0.15));
+    border-color: rgba(6,182,212,0.3);
+    box-shadow: 0 0 20px rgba(6,182,212,0.15),
+                inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+/* Theme toggle button glass */
+#themeToggle, #fullscreenToggle, #menuToggle {
+    background: rgba(255,255,255,0.04);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255,255,255,0.06);
+}
+
+#themeToggle:hover, #fullscreenToggle:hover, #menuToggle:hover {
+    background: rgba(6,182,212,0.1);
+    border-color: rgba(6,182,212,0.2);
+}
+
+/* Input glass */
+.peeditxos-form-input,
+.peeditxos-form-select {
+    background: rgba(255,255,255,0.03);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.06);
+}
+
+.peeditxos-form-input:focus,
+.peeditxos-form-select:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(6,182,212,0.15);
+}
+
+/* Scrollbar glass */
+::-webkit-scrollbar {
+    width: 8px; height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(6,182,212,0.4), rgba(139,92,246,0.3));
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(6,182,212,0.6), rgba(139,92,246,0.5));
+    background-clip: content-box;
+}
+
+/* Login card glass */
+.peeditxos-login-card {
+    background: rgba(255,255,255,0.03);
+    backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3),
+                inset 0 1px 0 rgba(255,255,255,0.05),
+                0 0 40px rgba(6,182,212,0.05);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    body::before { animation: none; }
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+[data-theme="light"] .peeditxos-sidebar {
+    background: rgba(255,255,255,0.85);
+    border-right: 1px solid rgba(0,0,0,0.06);
+    box-shadow: inset 1px 0 0 rgba(255,255,255,0.5),
+                0 0 40px rgba(6,182,212,0.02);
+}
+[data-theme="light"] .peeditxos-header,
+[data-theme="light"] .peeditxos-navbar {
+    background: rgba(255,255,255,0.9);
+    border-color: rgba(0,0,0,0.05);
+}
+[data-theme="light"] .peeditxos-card,
+[data-theme="light"] .dash-stat,
+[data-theme="light"] .dash-card {
+    background: rgba(0,0,0,0.02);
+    border: 1px solid rgba(0,0,0,0.04);
+}
+[data-theme="light"] .peeditxos-login-card {
+    background: rgba(255,255,255,0.95);
+    border: 1px solid rgba(0,0,0,0.06);
 }
