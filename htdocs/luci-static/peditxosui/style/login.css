@@ -16,7 +16,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg, #0a0e1a 0%, #1a1a2e 50%, #16213e 100%);
+    background: linear-gradient(135deg, var(--bg-primary, #0a0e1a) 0%, var(--bg-secondary, #1a1a2e) 50%, var(--bg-sidebar, #16213e) 100%);
     z-index: -2;
     overflow: hidden;
 }
@@ -81,22 +81,22 @@
 }
 
 .peeditxos-particle:nth-child(odd) {
-    background: linear-gradient(135deg, #06b6d4, #8b5cf6);
+    background: linear-gradient(135deg, var(--accent-primary, #06b6d4), var(--accent-secondary, #8b5cf6));
     box-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
 }
 
 .peeditxos-particle:nth-child(even) {
-    background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+    background: linear-gradient(135deg, var(--accent-secondary, #8b5cf6), var(--accent-primary, #06b6d4));
     box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
 }
 
 .peeditxos-particle:nth-child(3n) {
-    background: linear-gradient(135deg, #10b981, #06b6d4);
+    background: linear-gradient(135deg, var(--accent-success, #10b981), var(--accent-primary, #06b6d4));
     box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
 }
 
 .peeditxos-particle:nth-child(4n) {
-    background: linear-gradient(135deg, #f59e0b, #ef4444);
+    background: linear-gradient(135deg, var(--accent-warning, #f59e0b), var(--accent-danger, #ef4444));
     box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
 }
 
@@ -188,7 +188,7 @@
     left: 0;
     right: 0;
     height: 3px;
-    background: linear-gradient(90deg, #06b6d4, #8b5cf6, #10b981, #f59e0b, #06b6d4);
+    background: linear-gradient(90deg, var(--accent-primary, #06b6d4), var(--accent-secondary, #8b5cf6), var(--accent-success, #10b981), var(--accent-warning, #f59e0b), var(--accent-primary, #06b6d4));
     background-size: 200% 100%;
     animation: gradientMove 3s linear infinite;
 }
@@ -267,7 +267,7 @@
     font-size: 2rem;
     font-weight: 700;
     margin-bottom: 0.25rem;
-    background: linear-gradient(135deg, #06b6d4, #8b5cf6, #10b981);
+    background: linear-gradient(135deg, var(--accent-primary, #06b6d4), var(--accent-secondary, #8b5cf6), var(--accent-success, #10b981));
     background-size: 200% 200%;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -332,7 +332,7 @@
 
 .peeditxos-form-input:focus {
     outline: none;
-    border-color: #06b6d4;
+    border-color: var(--accent-primary, #06b6d4);
     box-shadow:
         0 0 0 3px rgba(6, 182, 212, 0.2),
         0 0 20px rgba(6, 182, 212, 0.2),
@@ -354,7 +354,7 @@
 }
 
 .peeditxos-form-label i {
-    color: #06b6d4;
+    color: var(--accent-primary, #06b6d4);
     width: 16px;
 }
 
@@ -381,7 +381,7 @@
 }
 
 .peeditxos-password-toggle:hover {
-    color: #06b6d4;
+    color: var(--accent-primary, #06b6d4);
 }
 
 /* Checkbox */
@@ -414,7 +414,7 @@
 }
 
 .peeditxos-checkbox input:checked + .peeditxos-checkbox-mark {
-    background: linear-gradient(135deg, #06b6d4, #8b5cf6);
+    background: linear-gradient(135deg, var(--accent-primary, #06b6d4), var(--accent-secondary, #8b5cf6));
     border-color: transparent;
 }
 
@@ -507,7 +507,7 @@
     font-size: 1rem;
     font-weight: 600;
     margin-top: 0.5rem;
-    background: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 50%, #10b981 100%);
+    background: linear-gradient(135deg, var(--accent-primary, #06b6d4) 0%, var(--accent-secondary, #8b5cf6) 50%, var(--accent-success, #10b981) 100%);
     background-size: 200% 200%;
     animation: buttonGradient 3s ease infinite;
     border: none;
@@ -583,7 +583,7 @@
 }
 
 .peeditxos-login-footer strong {
-    background: linear-gradient(135deg, #06b6d4, #8b5cf6);
+    background: linear-gradient(135deg, var(--accent-primary, #06b6d4), var(--accent-secondary, #8b5cf6));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -613,11 +613,11 @@
 [data-theme="light"] .peeditxos-form-input {
     background: rgba(255, 255, 255, 0.9);
     border-color: rgba(0, 0, 0, 0.1);
-    color: #1a1a2e;
+    color: var(--bg-secondary, #1a1a2e);
 }
 
 [data-theme="light"] .peeditxos-form-input:focus {
-    border-color: #06b6d4;
+    border-color: var(--accent-primary, #06b6d4);
     box-shadow:
         0 0 0 3px rgba(6, 182, 212, 0.15),
         0 0 15px rgba(6, 182, 212, 0.1);
@@ -640,7 +640,7 @@
 }
 
 [data-theme="light"] .peeditxos-password-toggle:hover {
-    color: #06b6d4;
+    color: var(--accent-primary, #06b6d4);
 }
 
 [data-theme="light"] .peeditxos-login-subtitle {

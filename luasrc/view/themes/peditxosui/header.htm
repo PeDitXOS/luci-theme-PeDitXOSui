@@ -54,7 +54,8 @@
 
 	<link rel="stylesheet" href="<%=media%>/style/peditxosui.css">
 	<link rel="stylesheet" href="<%=media%>/style/dashboard.css">
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+	<link rel="stylesheet" href="<%=media%>/fontawesome/css/all.min.css">
+	<link rel="stylesheet" href="<%=media%>/fonts/stylesheet.css">
 	<link rel="stylesheet" href="<%=media%>/peds/peds.css">
 	<link rel="shortcut icon" href="<%=media%>/favicon.ico">
 	<link rel="manifest" href="/luci-static/peditxosui/manifest.json">
@@ -118,7 +119,7 @@
 						<i class="fa-solid fa-expand"></i>
 					</button>
 					<div class="peeditxos-user-menu">
-						<span class="peeditxos-user-name"><%=os.getenv("USER") or "root"%></span>
+						<span class="peeditxos-user-name"><%=luci.dispatcher.context.session and luci.dispatcher.context.session.user or "root"%></span>
 					</div>
 				</div>
 			</header>
