@@ -1,7 +1,8 @@
 module("luci.controller.peditxosui-dashboard", package.seeall)
 
 function index()
-    entry({"admin", "status", "peditxosui"}, call("action_dashboard"), "PeDitXOS Dashboard", 2)
+    -- Override default status overview with our dashboard
+    entry({"admin", "status", "overview"}, call("action_dashboard"), "Status", 1)
 end
 
 function action_dashboard()
