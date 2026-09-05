@@ -6,7 +6,6 @@ function index()
 end
 
 function action_dashboard()
-    luci.template.render("themes/peditxosui/header", { title = "Status" })
-    luci.template.render("peditxosui/dashboard")
-    luci.template.render("themes/peditxosui/footer")
+    -- Use luci.dispatcher to render full page with proper JS loading order
+    luci.dispatcher.render("peditxosui/dashboard")
 end

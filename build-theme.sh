@@ -7,7 +7,7 @@ set -e
 THEME_NAME="peditxosui"
 THEME_TITLE="PeDitXOSui"
 PKG_NAME="luci-theme-${THEME_NAME}"
-PKG_VERSION="1.5.0"
+PKG_VERSION="1.5.1"
 PKG_RELEASE="01"
 WORK_DIR="$(pwd)"
 
