@@ -22,9 +22,10 @@
       "purpose": "any maskable"
     },
     {
-      "src": "/luci-static/peditxosui/peds/icon/apple/apple-touch-icon.png",
+      "src": "https://peditxos.ir/fav/apple-touch-icon.png",
       "sizes": "180x180",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }
